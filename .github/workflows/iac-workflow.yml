@@ -40,7 +40,7 @@ jobs:
     # Step 5: Terraform Plan
     - name: Terraform Plan
       run: |
-        terraform plan --var-file="environment/.env example"
+        terraform plan --var-file="environment/.env.example"
 
   ansible:
     name: Ansible Lint & Inventory Validation
