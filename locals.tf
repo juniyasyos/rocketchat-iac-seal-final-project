@@ -1,13 +1,13 @@
 # Local values for reuse throughout
 locals {
-  project_name          = "monitoring-project"
-  environment           = "learning"
-  region                = "us-east-1"
-  key_name              = "monitoring"
+  project_name          = "Rocket Chat Project"
+  environment           = var.env
+  region                = var.aws_region
+  key_name              = var.key_name
   instances = {
     minikube-server = {
       ami           = data.aws_ami.ubuntu.id
-      instance_type = "t3.large"
+      instance_type = var.instance_type
     }
   }
 }

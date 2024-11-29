@@ -37,7 +37,7 @@ Sebelum menggunakan repository ini, pastikan Anda memiliki:
 ├── locals.tf            # Variabel lokal Terraform
 ├── main.tf              # Konfigurasi utama Terraform
 ├── modules/             # Modul reusable Terraform
-│   ├── compute/         # Modul untuk EC2
+│   ├── compute/         # Modul untuk EC2 (example)
 │   └── network/         # Modul untuk VPC
 ├── output.tf            # Output Terraform
 ├── playbooks/           # Playbooks Ansible
@@ -61,17 +61,9 @@ Repository ini menggunakan Terraform Workspaces untuk mengisolasi environment:
    ```bash
    terraform workspace list
    ```
-2. **Membuat Workspace Baru:**
-   ```bash
-   terraform workspace new <nama_workspace>
-   ```
-   Contoh:
-   ```bash
-   terraform workspace new development
-   ```
 3. **Beralih ke Workspace:**
    ```bash
-   terraform workspace select <nama_workspace>
+   terraform workspace select development
    ```
 
 ### **2. Menjalankan Terraform**
@@ -123,11 +115,11 @@ Gunakan **Git Flow** untuk pengembangan:
 
 ## **Environment Spesifik**
 
-| **Environment** | **Konfigurasi**                | **Kebutuhan Infrastruktur**    | **Penggunaan**                                     |
+| **Environment**  | **Konfigurasi**                | **Kebutuhan Infrastruktur**     | **Penggunaan**                                    |
 |------------------|--------------------------------|---------------------------------|---------------------------------------------------|
-| **Development**  | `environment/development.env` | Single AZ, Instance kecil       | Pengujian lokal dan eksperimen                    |
-| **Staging**      | `environment/staging.env`     | Load Balancer, Instance sedang  | Simulasi sebelum produksi                         |
-| **Production**   | `environment/production.env`  | Multi-AZ, Instance besar        | Infrastruktur live untuk pengguna akhir           |
+| **Development**  | `environment/development.env`  | Single AZ, Instance kecil       | Pengujian lokal dan eksperimen                    |
+| **Staging**      | `environment/staging.env`      | Load Balancer, Instance sedang  | Simulasi sebelum produksi                         |
+| **Production**   | `environment/production.env`   | Multi-AZ, Instance besar        | Infrastruktur live untuk pengguna akhir           |
 
 ---
 
@@ -148,7 +140,7 @@ Gunakan **Git Flow** untuk pengembangan:
 - **Error Playbook:**
   Jalankan playbook dengan opsi `--check` untuk mode simulasi:
   ```bash
-  ansible-playbook -i inventories/<environment> playbooks/<playbook.yml> --check
+  ansible-playbook -i playbooks/<playbook.yml> --check
   ```
 
 ---
