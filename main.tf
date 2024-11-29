@@ -18,7 +18,7 @@ resource "aws_instance" "this" {
   for_each                    = local.instances
   ami                         = each.value.ami
   instance_type               = each.value.instance_type
-  key_name                    = module.devops_vpc.keypair
+  key_name                    = module.final-project-vpc.keypair
   subnet_id                   = each.value.subnet_id
   security_groups             = each.value.sg
   associate_public_ip_address = true
