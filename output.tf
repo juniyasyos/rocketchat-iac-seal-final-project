@@ -37,7 +37,7 @@ output "instance_security_group" {
 # Output untuk Semua Security Groups di VPC
 output "vpc_security_groups" {
   description = "Security group IDs in the VPC"
-  value       = [
+  value = [
     aws_security_group.docker_k8s_testing.id
   ]
 }
