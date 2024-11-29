@@ -8,7 +8,7 @@
 - Isolasi state file menggunakan **Terraform Workspaces**
 - Deployment otomatis menggunakan **Ansible**
 - Modular dan scalable untuk kebutuhan jangka panjang
-- Integrasi dengan cloud provider (AWS, Azure, GCP)
+- Integrasi dengan cloud provider AWS Service
 
 
 
@@ -17,14 +17,10 @@ Sebelum menggunakan repository ini, pastikan Anda memiliki:
 1. **Tools yang diinstal:**
    - [Terraform](https://www.terraform.io/downloads.html) (v1.4.0 atau lebih baru)
    - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
-   - Python (dengan `pip` untuk dependency Ansible)
+   - Python (dengan `pip install -r requirments.txt` untuk dependency yg Ansible)
 
 2. **Kredensial Cloud:**
-   - Konfigurasi kredensial untuk AWS, Azure, atau GCP (bergantung pada provider yang digunakan).
-
-3. **Akses SSH:**
-   - Pastikan Anda memiliki akses SSH ke server target.
-
+   - Konfigurasi kredensial untuk AWS Service
 
 
 ## **Struktur Repository**
@@ -32,7 +28,7 @@ Sebelum menggunakan repository ini, pastikan Anda memiliki:
 .
 ├── ansible.cfg          # Konfigurasi Ansible
 ├── data.tf              # Data sources Terraform (e.g., AMI, VPC)
-├── deploy/              # Script deployment tambahan
+├── deploy               # Script deployment tambahan
 ├── environment/         # File variabel spesifik environment
 │   ├── development.env  # Variabel untuk Dev
 │   ├── staging.env      # Variabel untuk Stag
@@ -50,7 +46,8 @@ Sebelum menggunakan repository ini, pastikan Anda memiliki:
 ├── requirements.txt     # Dependency Python untuk Ansible
 ├── roles/               # Roles Ansible
 │   ├── rocket_chat/     # Role untuk aplikasi RocketChat
-│   └── common/          # Role untuk setup awal
+│   ├── docker/          # Role untuk setup awal 
+|   └── monitoring       # Role untuk monitoring server
 ├── templates/           # Template file konfigurasi
 └── terraform.tfstate.d/ # State files untuk Terraform Workspaces
 ```
