@@ -44,3 +44,6 @@ Thumbs.db
 *.bak
 *.swp
 *.tmp
+
+# environtment 
+/environtment/*.env
