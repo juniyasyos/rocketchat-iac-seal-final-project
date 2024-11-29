@@ -1,4 +1,4 @@
-module "devops_vpc" {
+module "final-project-vpc" {
   source   = "./modules/network"
   vpc_name = var.vpc_name
   env      = var.env
