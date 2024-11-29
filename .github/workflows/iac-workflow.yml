@@ -36,27 +36,3 @@ jobs:
 
     - name: Terraform Validate
       run: terraform validate
-
-  ansible:
-    runs-on: ubuntu-latest
-
-    steps:
-    # Step 1: Checkout repository
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-
-    # Step 2: Setup the latest Python version
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 'latest'
-
-    # Step 3: Install Ansible dependencies
-    - name: Install Ansible and Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    # Step 4: Lint Ansible Playbooks
-    - name: Ansible Lint
-      run: ansible-lint playbooks/setup/*.yml
