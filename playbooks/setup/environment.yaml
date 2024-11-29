@@ -1,0 +1,21 @@
+---
+- name: Ensure kubectl is installed
+  ansible.builtin.command: kubectl version --client
+  register: kubectl_check
+  failed_when: "'Client Version' not in kubectl_check.stdout"
+  changed_when: false
+
+- name: Copy deployments.yaml to remote host
+  ansible.builtin.copy:
+    src: /root/seal-batch-7-live-demo/ahmad-ilyas/kubernetes/tamplates/kubernetes/kube-namespace/deployment.yaml
+    dest: /tmp/deployments.yaml
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Apply Kubernetes deployments
+  ansible.builtin.command: kubectl apply -f /tmp/deployments.yaml
+  args:
+    chdir: /tmp
+  register: k8s_apply
+  changed_when: "'created' in k8s_apply.stdout or 'configured' in k8s_apply.stdout"

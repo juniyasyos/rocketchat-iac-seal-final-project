@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        environment: production
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+        ports:
+        - containerPort: 80
+      - name: go-web-app
+        image: ibnuislamy/sib-ec2:1.0.2
+        ports:
+        - containerPort: 8080   
+  # strategy:
+  #   type: Recreate
+  strategy:
+    rollingUpdate:
+      maxSurge: 5
+      maxUnavailable: 1
+    type: RollingUpdate

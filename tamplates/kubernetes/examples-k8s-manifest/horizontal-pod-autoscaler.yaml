@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-web
+  labels:
+    name: nodejs-web
+spec:
+  selector:
+    matchLabels:
+      name: nodejs-web
+  template:
+    metadata:
+      name: nodejs-web
+      labels:
+        name: nodejs-web
+    spec:
+      containers:
+        - name: nodejs-web
+          image: khannedy/nodejs-web:1
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-web-service
+spec:
+  type: NodePort
+  selector:
+    name: nodejs-web
+  ports:
+    - port: 80
+      targetPort: 3000
+      nodePort: 30101
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-name
+spec:
+  minReplicas: 5
+  maxReplicas: 10
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nodejs-web
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 40
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 30

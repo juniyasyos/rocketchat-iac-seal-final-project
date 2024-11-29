@@ -1,0 +1,10 @@
+- name: Check if Docker is installed
+  ansible.builtin.command:
+    cmd: docker --version
+  register: docker_installed
+  failed_when: false
+  changed_when: false
+
+- name: setup docker and docker-compose
+  ansible.builtin.include_tasks: setup.yml
+  when: docker_installed.rc != 0

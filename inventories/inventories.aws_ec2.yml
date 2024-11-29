@@ -1,0 +1,9 @@
+plugin: amazon.aws.aws_ec2
+profile: "{{ lookup('env', 'AWS_PROFILE') | default('default', true) }}"
+regions:
+- us-east-1
+hostnames:
+- ip-address
+keyed_groups:
+- key: tags.Name
+  prefix: tag

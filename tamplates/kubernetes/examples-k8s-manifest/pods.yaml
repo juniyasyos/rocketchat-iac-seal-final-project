@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: curl
+  labels:
+    name: curl
+spec:
+  containers:
+    - name: curl
+      image: alpine/curl
+      args:
+      - sleep
+      - "4800"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: go-web-app
+spec:
+  containers:
+    - name: go-web-app
+      image: ibnuislamy/sib-ec2:1.0.2
+      ports:
+        - containerPort: 8080

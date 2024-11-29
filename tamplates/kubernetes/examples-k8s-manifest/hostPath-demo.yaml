@@ -1,0 +1,18 @@
+apiVersion: v1  
+kind: Pod  
+metadata:
+  name: hostpath-pod  
+spec:
+  volumes:
+    - name: hostpath-volume  
+      hostPath:
+        path: /data
+        type: DirectoryOrCreate
+  containers:
+    - name: container-1  
+      image: busybox
+      command: ["/bin/sh","-c"]
+      args: ["ls /cache ; sleep 1000"]
+      volumeMounts:
+        - mountPath: /cache  
+          name: hostpath-volume

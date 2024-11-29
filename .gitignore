@@ -1,0 +1,46 @@
+# Terraform State Files
+*.tfstate
+*.tfstate.backup
+terraform.tfstate.d/
+
+# Terraform Variable Files
+*.tfvars
+*.tfvars.json
+
+# Crash Logs
+crash.log
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sensitive data logs
+.terraform/
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+*.vault
+
+# Python Virtual Environment (jika menggunakan Python untuk automasi)
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+ENV/
+env/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.bak
+*.swp
+*.tmp

@@ -1,0 +1,42 @@
+- name: Uninstall Docker and Docker Compose
+  hosts: all
+  become: true
+  collections:
+    - community.docker
+
+  tasks:
+    - name: Stop and remove all Docker containers
+      community.docker.docker_container:
+        name: all 
+        state: absent
+        force_kill: true
+      ignore_errors: true 
+
+    - name: Remove all Docker images
+      community.docker.docker_image:
+        name: all
+        state: absent
+      ignore_errors: true
+      
+    - name: Remove Docker Compose binary (if installed)
+      ansible.builtin.file:
+        path: /usr/local/bin/docker-compose
+        state: absent
+
+    - name: Uninstall Docker packages
+      ansible.builtin.package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: absent
+
+    - name: Remove Docker directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/lib/docker
+        - /etc/docker
+        - /var/run/docker.sock

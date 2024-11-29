@@ -1,0 +1,27 @@
+---
+- name: Deploy Grafana K6 Configuration to Remote Servers
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+  - role: gantsign.minikube
+    minikube_version: '1.32.0'
+    minikube_architecture: 'arm64'
+    minikube_download_dir: "{{ ansible_facts.env.HOME + '/Downloads' }}"
+
+  tasks:
+  - name: Deploy Docker for K6 Environment
+    ansible.builtin.include_role:
+      name: docker
+
+  # - name: Install kubectl for Kubernetes Management
+  #   ansible.builtin.include_role:
+  #     name: kubectl
+
+  # - name: Install Additional Tools (kubectx, kubens)
+  #   ansible.builtin.include_role:
+  #     name: tools
+
+  # - name: setup docker and docker-compose
+  #   ansible.builtin.include_tasks: environment.yml

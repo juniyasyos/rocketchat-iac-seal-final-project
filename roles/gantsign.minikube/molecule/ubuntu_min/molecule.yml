@@ -1,0 +1,33 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+role_name_check: 2
+
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+  flake8
+
+platforms:
+  - name: ansible_role_minikube_ubuntu_min
+    image: ubuntu:18.04
+
+provisioner:
+  name: ansible
+  playbooks:
+    converge: ../default/converge.yml
+  config_options:
+    defaults:
+      inject_facts_as_vars: false
+
+scenario:
+  name: ubuntu_min
+
+verifier:
+  name: testinfra
+  directory: ../default/tests

@@ -1,0 +1,14 @@
+- name: Download Minikube .deb file
+  get_url:
+    url: https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+    dest: /tmp/minikube_latest_amd64.deb
+
+- name: Install Minikube
+  apt:
+    deb: /tmp/minikube_latest_amd64.deb
+    state: present
+
+- name: Start Minikube
+  command: minikube start
+  args:
+    creates: /home/{{ ansible_user }}/.minikube

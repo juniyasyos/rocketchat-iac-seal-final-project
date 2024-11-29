@@ -1,0 +1,13 @@
+stepnya adalah :
+1. masuk ke aws console
+2. create keypair .pem di menu keypair di aws console
+3. otomatis nanti file .pem nya ke terdownload ke local kamu
+4. lalu lakukan chmod 400 ke file .pem tersebut
+5. setelah itu jalanin perintah di terminal kamu: ssh-keygen -y -f  xxxxx.pem
+6. copy ssh-rsa semua
+7. masuk ke instance nya kamu via instance connect
+8. lalu jalanin perintah sudo vim .ssh/authorized_keys
+9. paste kan ssh-rsa yg tadi kamu copy dari local kamu ke authorized_keys
+10. lalu simpen file nya kalau pake vim pake :wq 
+11. lalu balik ke terminal di local kamu jalanin perintah : ssh -i xxx.pem (public dns) 
+12. contoh nya begini : ssh -i ibnu_ssh.pem ubuntu@ec2-34-235-115-30.compute-1.amazonaws.com

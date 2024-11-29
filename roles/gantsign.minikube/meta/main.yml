@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  author: John Freeman
+  role_name: minikube
+  description: Ansible role for downloading and installing Minikube.
+  company: GantSign Ltd.
+  license: MIT
+  min_ansible_version: '2.12'
+  platforms:
+    - name: EL
+      versions:
+        - '8'
+    - name: Fedora
+      versions:
+        - '35'
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+    - name: Debian
+      versions:
+        - stretch
+        - buster
+        - bullseye
+    - name: opensuse
+      versions:
+        - '15.4'
+  galaxy_tags:
+    - minikube
+    - kubernetes
+    - k8s
+    - development
+dependencies: []

@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Hentikan skrip jika ada kesalahan
+set -e
+
+# Periksa apakah dijalankan sebagai root
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Error: Skrip ini harus dijalankan sebagai root." >&2
+  exit 1
+fi
+
+# Fungsi bantuan
+show_help() {
+  cat <<EOF
+Usage: $0 [options]
+
+Options:
+  --task-all              Jalankan semua task (default).
+  --skip-terraform-apply  Lewati proses 'terraform apply'.
+  --skip-ansible          Lewati semua task Ansible.
+  --help                  Tampilkan bantuan ini.
+
+EOF
+}
+
+# Fungsi log
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"
+}
+
+# Fungsi untuk memastikan perizinan
+ensure_permissions() {
+  log "Mengatur perizinan untuk direktori dan file..."
+  chmod -R 750 ./playbooks
+  chmod 640 ./playbooks/**/*.yaml
+  chown -R root:root ./playbooks
+}
+
+# Fungsi untuk Terraform
+run_terraform() {
+  log "==> Inisialisasi Terraform"
+  terraform init
+
+  if [ ! -f "terraform.tfstate" ] || [ "$TASK_ALL" == true ]; then
+    log "==> terraform.tfstate tidak ditemukan atau --task-all aktif, menjalankan terraform apply"
+    terraform apply -auto-approve
+  else
+    log "==> terraform.tfstate ditemukan, melewati terraform apply"
+  fi
+}
+
+# Fungsi untuk Ansible
+run_ansible() {
+  log "==> Menjalankan playbook Ansible"
+  playbooks=(
+    "./playbooks/setup/main.yaml"
+  )
+
+  for playbook in "${playbooks[@]}"; do
+    log "==> Menjalankan playbook: $playbook"
+    ansible-playbook "$playbook"
+  done
+}
+
+# Inisialisasi variabel default
+TASK_ALL=true
+SKIP_TERRAFORM_APPLY=false
+SKIP_ANSIBLE=false
+
+# Parsing argumen
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --task-all) TASK_ALL=true ;;
+    --skip-terraform-apply) SKIP_TERRAFORM_APPLY=true ;;
+    --skip-ansible) SKIP_ANSIBLE=true ;;
+    --help) show_help; exit 0 ;;
+    *) echo "Unknown option: $1"; show_help; exit 1 ;;
+  esac
+  shift
+done
+
+# Pastikan perizinan sudah benar
+ensure_permissions
+
+# 1. Menjalankan Terraform jika tidak dilewati
+if [[ "$TASK_ALL" == true || "$SKIP_TERRAFORM_APPLY" == false ]]; then
+  run_terraform
+else
+  log "==> Lewati proses Terraform Apply (--skip-terraform-apply)"
+fi
+
+# 2. Menjalankan Ansible jika tidak dilewati
+if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false ]]; then
+  run_ansible
+else
+  log "==> Lewati proses Ansible (--skip-ansible)"
+fi
+
+log "==> Server Ip Information"
+ansible-inventory --graph
+
+log "==> Deployment selesai."

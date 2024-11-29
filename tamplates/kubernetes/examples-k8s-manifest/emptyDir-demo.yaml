@@ -1,0 +1,26 @@
+apiVersion: v1  
+kind: Pod  
+metadata:
+  name: emptydir-pod  
+  labels:
+    app: busybox
+    purpose: emptydir-demo  
+spec:
+  volumes:
+    - name: cache-volume  
+      emptyDir: {}
+  containers:
+    - name: container-1  
+      image: busybox
+      command: ["/bin/sh","-c"]
+      args: ["date >> /cache/date.txt; sleep 1000"]
+      volumeMounts:
+        - mountPath: /cache  
+          name: cache-volume
+    - name: container-2
+      image: busybox
+      command: ["/bin/sh","-c"]
+      args: ["cat /cache/date.txt; sleep 1000"]
+      volumeMounts:
+        - mountPath: /cache  
+          name: cache-volume

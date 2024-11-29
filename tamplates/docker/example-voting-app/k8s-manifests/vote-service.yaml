@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vote
+  name: vote
+spec:
+  type: ClusterIP
+  ports:
+  - name: "vote-service"
+    port: 8080
+    targetPort: 80
+  selector:
+    app: vote
+    
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vote
+  labels:
+    name: vote
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: vote.dwyor.xyz
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: vote
+            port:
+              number: 8080

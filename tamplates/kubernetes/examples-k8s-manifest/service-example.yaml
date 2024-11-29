@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-service
+  labels:
+    name: example-service
+spec:
+  type: ExternalName
+  externalName: kartolo.sby.datautama.net.id
+  ports:
+    - port: 443
