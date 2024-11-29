@@ -38,22 +38,20 @@ jobs:
       run: terraform validate
 
   ansible:
-    name: Ansible Lint & Inventory Validation
     runs-on: ubuntu-latest
-    needs: terraform
 
     steps:
-    # Step 1: Checkout the repository
+    # Step 1: Checkout repository
     - name: Checkout Repository
       uses: actions/checkout@v3
 
-    # Step 2: Setup Python for Ansible
+    # Step 2: Setup the latest Python version
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10
+        python-version: 'latest'
 
-    # Step 3: Install Ansible Dependencies
+    # Step 3: Install Ansible dependencies
     - name: Install Ansible and Dependencies
       run: |
         python -m pip install --upgrade pip
