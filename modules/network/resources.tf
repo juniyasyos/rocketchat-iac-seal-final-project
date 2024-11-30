@@ -1,8 +1,8 @@
 # Public Subnets
 resource "aws_subnet" "public_1" {
-  depends_on = [module.vpc]
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "10.100.110.0/24"
+  depends_on        = [module.vpc]
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = "10.100.110.0/24"
   availability_zone = module.vpc.azs[0]
 
   tags = {
@@ -13,9 +13,9 @@ resource "aws_subnet" "public_1" {
 }
 
 resource "aws_subnet" "public_2" {
-  depends_on = [module.vpc]
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "10.100.120.0/24"
+  depends_on        = [module.vpc]
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = "10.100.120.0/24"
   availability_zone = module.vpc.azs[1]
 
   tags = {
@@ -26,9 +26,9 @@ resource "aws_subnet" "public_2" {
 }
 
 resource "aws_subnet" "public_3" {
-  depends_on = [module.vpc]
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "10.100.130.0/24"
+  depends_on        = [module.vpc]
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = "10.100.130.0/24"
   availability_zone = module.vpc.azs[2]
 
   tags = {
@@ -40,9 +40,9 @@ resource "aws_subnet" "public_3" {
 
 # Private Subnets
 resource "aws_subnet" "private_1" {
-  depends_on = [module.vpc]
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "10.100.210.0/24"
+  depends_on        = [module.vpc]
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = "10.100.210.0/24"
   availability_zone = module.vpc.azs[0]
 
   tags = {
@@ -53,9 +53,9 @@ resource "aws_subnet" "private_1" {
 }
 
 resource "aws_subnet" "private_2" {
-  depends_on = [module.vpc]
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "10.100.220.0/24"
+  depends_on        = [module.vpc]
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = "10.100.220.0/24"
   availability_zone = module.vpc.azs[1]
 
   tags = {
