@@ -7,7 +7,7 @@
 
 - name: Copy deployments.yaml to remote host
   ansible.builtin.copy:
-    src: /root/seal-batch-7-live-demo/ahmad-ilyas/kubernetes/tamplates/kubernetes/kube-namespace/deployment.yaml
+    src: /root/seal-batch-7-live-demo/ahmad-ilyas/kubernetes/templates/kubernetes/kube-namespace/deployment.yaml
     dest: /tmp/deployments.yaml
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
