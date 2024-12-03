@@ -47,4 +47,5 @@ Thumbs.db
 
 # environment 
 /environment/*.env
-/azzuri-dev/nginx/certs/*
+/azzuri-dev/nginx/certs/*.crt
+/azzuri-dev/nginx/certs/*.key
