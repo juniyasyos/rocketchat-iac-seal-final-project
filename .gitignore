@@ -50,3 +50,6 @@ Thumbs.db
 
 # environment 
 /environment/*.env
+
+# self signed SSL certificate 
+azzuri-dev/nginx/certs/
