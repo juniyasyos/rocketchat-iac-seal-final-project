@@ -1,102 +1,88 @@
 #!/bin/bash
 
-# Hentikan skrip jika ada kesalahan
 set -e
 
-# Periksa apakah dijalankan sebagai root
 if [ "$(id -u)" -ne 0 ]; then
   echo "Error: Skrip ini harus dijalankan sebagai root." >&2
   exit 1
 fi
 
-# Fungsi bantuan
 show_help() {
   cat <<EOF
 Usage: $0 [options]
 
 Options:
-  --task-all              Jalankan semua task (default).
-  --skip-terraform-apply  Lewati proses 'terraform apply'.
-  --skip-ansible          Lewati semua task Ansible.
-  --help                  Tampilkan bantuan ini.
-
+  --task-all          Jalankan semua task (default).
+  --skip-apply        Lewati 'terraform apply'.
+  --skip-ansible      Lewati task Ansible.
+  --plan-only         Jalankan 'terraform plan' saja.
+  --var-file=<file>   File variabel Terraform (default: .env.example).
+  --env=<file>        Tentukan file environment (default: development.env).
+  --help              Tampilkan bantuan.
 EOF
 }
 
-# Fungsi log
-log() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"
-}
+log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"; }
 
-# Fungsi untuk memastikan perizinan
-ensure_permissions() {
-  log "Mengatur perizinan untuk direktori dan file..."
-  chmod -R 750 ./playbooks
-  chmod 640 ./playbooks/**/*.yaml
-  chown -R root:root ./playbooks
-}
-
-# Fungsi untuk Terraform
 run_terraform() {
-  log "==> Inisialisasi Terraform"
+  log "Inisialisasi Terraform"
   terraform init
 
-  if [ ! -f "terraform.tfstate" ] || [ "$TASK_ALL" == true ]; then
-    log "==> terraform.tfstate tidak ditemukan atau --task-all aktif, menjalankan terraform apply"
-    terraform apply -auto-approve
+  local var_file_opt=""
+  [[ -n "$VAR_FILE" ]] && var_file_opt="-var-file=environment/$VAR_FILE"
+
+  if [[ "$PLAN_ONLY" == true ]]; then
+    log "Menjalankan terraform plan $var_file_opt"
+    terraform plan $var_file_opt
+  elif [[ "$SKIP_APPLY" == false ]]; then
+    log "Menjalankan terraform apply $var_file_opt"
+    terraform apply -auto-approve $var_file_opt
   else
-    log "==> terraform.tfstate ditemukan, melewati terraform apply"
+    log "Lewati terraform apply (--skip-apply)"
   fi
 }
 
-# Fungsi untuk Ansible
 run_ansible() {
-  log "==> Menjalankan playbook Ansible"
-  playbooks=(
-    "./playbooks/setup/main.yaml"
-  )
-
-  for playbook in "${playbooks[@]}"; do
-    log "==> Menjalankan playbook: $playbook"
-    ansible-playbook "$playbook"
-  done
+  log "Menjalankan playbook Ansible dengan environment file: environment/$ENV_FILE"
+  ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath environment/$ENV_FILE)"
 }
 
-# Inisialisasi variabel default
-TASK_ALL=true
-SKIP_TERRAFORM_APPLY=false
-SKIP_ANSIBLE=false
+setup_python_env() {
+  log "Menyiapkan Python Virtual Environment (.venv)"
+  [[ -d .venv ]] || python3 -m venv .venv
+  [[ -f requirements.txt ]] && ./.venv/bin/pip install -r requirements.txt
+}
 
-# Parsing argumen
+# Default flags
+TASK_ALL=true
+SKIP_APPLY=false
+SKIP_ANSIBLE=false
+PLAN_ONLY=false
+VAR_FILE=".env.example"
+ENV_FILE="development.env"
+
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --task-all) TASK_ALL=true ;;
-    --skip-terraform-apply) SKIP_TERRAFORM_APPLY=true ;;
+    --skip-apply) SKIP_APPLY=true ;;
     --skip-ansible) SKIP_ANSIBLE=true ;;
+    --plan-only) PLAN_ONLY=true ;;
+    --var-file=*) VAR_FILE="${1#*=}" ;;
+    --env=*) ENV_FILE="${1#*=}" ;;
     --help) show_help; exit 0 ;;
     *) echo "Unknown option: $1"; show_help; exit 1 ;;
   esac
   shift
 done
 
-# Pastikan perizinan sudah benar
-ensure_permissions
+setup_python_env
 
-# 1. Menjalankan Terraform jika tidak dilewati
-if [[ "$TASK_ALL" == true || "$SKIP_TERRAFORM_APPLY" == false ]]; then
+if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == false ]]; then
   run_terraform
-else
-  log "==> Lewati proses Terraform Apply (--skip-terraform-apply)"
 fi
 
-# 2. Menjalankan Ansible jika tidak dilewati
 if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false ]]; then
   run_ansible
-else
-  log "==> Lewati proses Ansible (--skip-ansible)"
 fi
 
-log "==> Server Ip Information"
-ansible-inventory --graph
-
-log "==> Deployment selesai."
+log "Deployment selesai."
