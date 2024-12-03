@@ -1,1 +1,0 @@
-This repository for education purpose SEAL SIB7

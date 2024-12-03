@@ -3,6 +3,7 @@
 *.tfstate.backup
 terraform.tfstate.d/
 
+
 # Terraform Variable Files
 *.tfvars
 *.tfvars.json
@@ -23,6 +24,7 @@ override.tf.json
 # Ansible
 *.retry
 *.vault
+.venv
 
 # Python Virtual Environment (jika menggunakan Python untuk automasi)
 __pycache__/
@@ -38,6 +40,7 @@ env/
 # OS Generated Files
 .DS_Store
 Thumbs.db
+.vscode
 
 # Logs and temp files
 *.log
@@ -45,5 +48,8 @@ Thumbs.db
 *.swp
 *.tmp
 
-# environtment 
-/environtment/*.env
+# environment 
+/environment/*.env
+
+# self signed SSL certificate 
+azzuri-dev/nginx/certs/

@@ -5,7 +5,11 @@ locals {
   region       = var.aws_region
   key_name     = var.key_name
   instances = {
-    minikube-server = {
+    testing-server = {
+      ami           = data.aws_ami.ubuntu.id
+      instance_type = var.instance_type
+    }
+    nginx-server = {
       ami           = data.aws_ami.ubuntu.id
       instance_type = var.instance_type
     }
