@@ -2,11 +2,13 @@
 
 set -e
 
+# Check if the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
   echo "Error: Skrip ini harus dijalankan sebagai root." >&2
   exit 1
 fi
 
+# Display help message
 show_help() {
   cat <<EOF
 Usage: $0 [options]
@@ -16,73 +18,132 @@ Options:
   --skip-apply        Lewati 'terraform apply'.
   --skip-ansible      Lewati task Ansible.
   --plan-only         Jalankan 'terraform plan' saja.
-  --var-file=<file>   File variabel Terraform (default: .env.example).
   --env=<file>        Tentukan file environment (default: development.env).
   --help              Tampilkan bantuan.
 EOF
 }
 
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"; }
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"
+}
 
+# Check if required files or directories exist
+check_file_exists() {
+  local file="$1"
+  if [ ! -f "$file" ]; then
+    echo "Error: File '$file' tidak ditemukan." >&2
+    exit 1
+  fi
+}
+
+check_directory_exists() {
+  local dir="$1"
+  if [ ! -d "$dir" ]; then
+    echo "Error: Direktori '$dir' tidak ditemukan." >&2
+    exit 1
+  fi
+}
+
+# Initialize Terraform and apply or plan
 run_terraform() {
   log "Inisialisasi Terraform"
   terraform init
 
-  local var_file_opt=""
-  [[ -n "$VAR_FILE" ]] && var_file_opt="-var-file=environment/$VAR_FILE"
+  local env_file_opt=""
+  if [[ -n "$ENV_FILE" ]]; then
+    env_file_opt="-var-file=environment/$ENV_FILE"
+    check_file_exists "environment/$ENV_FILE"
+  fi
 
   if [[ "$PLAN_ONLY" == true ]]; then
-    log "Menjalankan terraform plan $var_file_opt"
-    terraform plan $var_file_opt
+    log "Menjalankan terraform plan $env_file_opt"
+    terraform plan $env_file_opt
   elif [[ "$SKIP_APPLY" == false ]]; then
-    log "Menjalankan terraform apply $var_file_opt"
-    terraform apply -auto-approve $var_file_opt
+    log "Menjalankan terraform apply $env_file_opt"
+    terraform apply -auto-approve $env_file_opt
   else
     log "Lewati terraform apply (--skip-apply)"
   fi
 }
 
+# Run Ansible Playbook
 run_ansible() {
-  log "Menjalankan playbook Ansible dengan environment file: environment/$ENV_FILE"
-  ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath environment/$ENV_FILE)"
+  log "Menjalankan playbook Ansible"
+  ansible-playbook ./playbooks/setup/main.yaml
+
+  # Cek jika ENV_FILE ditentukan, jika ya, tambahkan --extra-vars
+  # if [[ -n "$ENV_FILE" && -f "environment/$ENV_FILE" ]]; then
+  #   ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath environment/$ENV_FILE)"
+  # else
+  #   ansible-playbook ./playbooks/setup/main.yaml
+  # fi
 }
 
+# Setup Python virtual environment
 setup_python_env() {
   log "Menyiapkan Python Virtual Environment (.venv)"
-  [[ -d .venv ]] || python3 -m venv .venv
-  [[ -f requirements.txt ]] && ./.venv/bin/pip install -r requirements.txt
+
+  # Pastikan requirements.txt ada sebelum membuat virtual environment
+  check_file_exists "requirements.txt"
+
+  # Jika .venv belum ada, buatlah
+  if [ ! -d .venv ]; then
+    python3 -m venv .venv
+  fi
+
+  # Aktifkan virtual environment
+  source .venv/bin/activate
+
+  # Install dependencies jika requirements.txt ada
+  if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+  fi
 }
 
-# Default flags
+# Default flags and values
 TASK_ALL=true
 SKIP_APPLY=false
 SKIP_ANSIBLE=false
 PLAN_ONLY=false
-VAR_FILE=".env.example"
 ENV_FILE="development.env"
 
+# Parsing options from command-line arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    --task-all) TASK_ALL=true ;;
-    --skip-apply) SKIP_APPLY=true ;;
-    --skip-ansible) SKIP_ANSIBLE=true ;;
-    --plan-only) PLAN_ONLY=true ;;
-    --var-file=*) VAR_FILE="${1#*=}" ;;
-    --env=*) ENV_FILE="${1#*=}" ;;
-    --help) show_help; exit 0 ;;
-    *) echo "Unknown option: $1"; show_help; exit 1 ;;
+  --task-all) TASK_ALL=true ;;
+  --skip-apply) SKIP_APPLY=true ;;
+  --skip-ansible) SKIP_ANSIBLE=true ;;
+  --plan-only) PLAN_ONLY=true ;;
+  --env=*) ENV_FILE="${1#*=}" ;;
+  --help)
+    show_help
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1"
+    show_help
+    exit 1
+    ;;
   esac
   shift
 done
 
+# Ensure required files and directories exist before proceeding
+check_directory_exists "./playbooks"
+check_file_exists "./requirements.txt"
+
+# Setup Python environment
 setup_python_env
 
+# Execute Terraform if necessary
 if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == false ]]; then
   run_terraform
 fi
 
+# Execute Ansible if necessary
 if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false ]]; then
   run_ansible
 fi
 
 log "Deployment selesai."
+ansible-inventory --graph

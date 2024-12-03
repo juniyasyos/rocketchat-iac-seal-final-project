@@ -4,24 +4,58 @@
   become: true
   gather_facts: true
 
-  roles:
-  - role: gantsign.minikube
-    minikube_version: '1.32.0'
-    minikube_architecture: 'arm64'
-    minikube_download_dir: "{{ ansible_facts.env.HOME + '/Downloads' }}"
-
   tasks:
-  - name: Deploy Docker for K6 Environment
+  - name: Fetch private IP addresses
+    block:
+    - name: Get private IP of testing server
+      set_fact:
+        ip_server_testing: "{{ hostvars[groups['tag_testing_server'][0]].ansible_default_ipv4.address | default('') }}"
+
+    - name: Get private IP of frontend server
+      set_fact:
+        ip_target_testing: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
+
+    - name: Debug IP addresses
+      ansible.builtin.debug:
+        msg:
+        - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
+        - "Nginx IP: {{ ip_target_testing | default('Not defined') }}"
+
+  - name: Ensure Docker is installed
+    block:
+    - name: Check Docker installation
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install Docker if not installed
+      ansible.builtin.include_role:
+        name: docker
+      when: docker_check.rc != 0
+
+    rescue:
+    - name: Fail if Docker installation fails
+      ansible.builtin.fail:
+        msg: "Docker installation failed. Check Docker role or system configuration."
+
+  - name: Apply Monitoring setup
     ansible.builtin.include_role:
-      name: docker
+      name: "monitoring"
+    when: "'tag_nginx_server' in group_names"
 
-  # - name: Install kubectl for Kubernetes Management
-  #   ansible.builtin.include_role:
-  #     name: kubectl
+  # - name: Configure Testing Environment
+  #   block:
+  #   - name: Apply testing role with required variables
+  #     ansible.builtin.include_role:
+  #       name: "{{ testing_role }}"
+  #     vars:
+  #       ip_target: "{{ ip_target_frontend }}"
+  #       ip_server: "{{ ip_target_testing }}"
+  #     when: "'tag_testing_server' in group_names"
 
-  # - name: Install Additional Tools (kubectx, kubens)
-  #   ansible.builtin.include_role:
-  #     name: tools
-
-  # - name: setup docker and docker-compose
-  #   ansible.builtin.include_tasks: environment.yml
+  #   rescue:
+  #   - name: Handle testing setup failure
+  #     ansible.builtin.debug:
+  #       msg: "Testing setup failed, but continuing deployment."
