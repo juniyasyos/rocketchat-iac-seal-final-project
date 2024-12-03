@@ -15,10 +15,10 @@ module "final-project-vpc" {
 
 # EC2 Instances
 resource "aws_instance" "this" {
-  for_each                    = local.instances
-  ami                         = each.value.ami
-  instance_type               = each.value.instance_type
-  key_name                    = module.final-project-vpc.keypair
+  for_each      = local.instances
+  ami           = each.value.ami
+  instance_type = each.value.instance_type
+  key_name      = module.final-project-vpc.keypair
   # subnet_id                   = each.value.subnet_id
   subnet_id                   = module.final-project-vpc.public_subnets[0]
   security_groups             = module.final-project-vpc.frontend_ids
