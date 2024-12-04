@@ -3,36 +3,47 @@ name: IaC Validation Workflow
 on:
   push:
     branches:
-    - main
-    - development
+      - main
+      - development
   pull_request:
     branches:
-    - main
-    - development
+      - main
+      - development
 
 jobs:
   terraform:
-    name: Terraform Validation & Plan
+    name: Terraform Validation & Format Correction
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    # Step 2: Setup Terraform
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.4.0
+      # Step 2: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.0
 
-    # Step 3: Initialize Terraform
-    - name: Terraform Init
-      run: terraform init
+      # Step 3: Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
 
-    # Step 4: Terraform Format & Validation
-    - name: Terraform Format Check
-      run: terraform fmt -check -recursive
+      # Step 4: Check and Correct Terraform Format
+      - name: Terraform Format Correction
+        run: terraform fmt -recursive
 
-    - name: Terraform Validate
-      run: terraform validate
+      # Step 5: Validate Terraform Configuration
+      - name: Terraform Validate
+        run: terraform validate
+
+      # Step 6: Commit Changes (if format was corrected)
+      - name: Commit Changes
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "chore: Auto-corrected Terraform formatting"
+          git push
