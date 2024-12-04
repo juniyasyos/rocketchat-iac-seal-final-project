@@ -1,4 +1,4 @@
-name: IaC Validation Workflow
+name: IaC Validation & Auto-Format Workflow
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Validation & Format Correction
+    name: Terraform Validation & Auto-Format
     runs-on: ubuntu-latest
 
     steps:
@@ -32,18 +32,27 @@ jobs:
 
       # Step 4: Check and Correct Terraform Format
       - name: Terraform Format Correction
-        run: terraform fmt -recursive
+        id: format
+        run: |
+          terraform fmt -recursive
+          git diff --name-only --exit-code || echo "::set-output name=changed::true"
+        continue-on-error: true
 
       # Step 5: Validate Terraform Configuration
       - name: Terraform Validate
         run: terraform validate
 
-      # Step 6: Commit Changes (if format was corrected)
-      - name: Commit Changes
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git diff-index --quiet HEAD || git commit -m "chore: Auto-corrected Terraform formatting"
-          git push
+      # Step 6: Create PR for formatting changes
+      - name: Create Pull Request
+        if: steps.format.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          branch: auto-terraform-format
+          base: main
+          commit-message: "chore: Auto-correct Terraform formatting"
+          title: "chore: Auto-correct Terraform formatting"
+          body: |
+            This PR includes automatic corrections for Terraform formatting issues.
+          delete-branch: false
