@@ -35,3 +35,16 @@ resource "aws_instance" "this" {
     Environment = local.environment
   }
 }
+
+module "elastic_beanstalk" {
+  source         = "./modules/elastic_beanstalk"
+  env            = var.env
+  instance_type  = var.instance_type
+  mongodb_url    = var.mongodb_url
+  root_url       = var.root_url
+}
+
+module "s3_storage" {
+  source = "./modules/storage"
+  env    = var.env
+}
