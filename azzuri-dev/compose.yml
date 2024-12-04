@@ -5,7 +5,7 @@ volumes:
 
 services:
   rocketchat:
-    image: ${IMAGE:-registry.rocket.chat/rocketchat/rocket.chat}:${RELEASE:-latest}
+    image: ${IMAGE:-registry.rocket.chat/rocketchat/rocket.chat}:${RELEASE:-new-version}
     restart: always
     environment:
       MONGO_URL: "${MONGO_URL:-\
