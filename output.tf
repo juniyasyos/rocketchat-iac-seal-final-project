@@ -16,3 +16,12 @@ output "instance_security_group" {
   value       = [for instance in aws_instance.this : instance.security_groups]
 }
 
+output "beanstalk_env_url" {
+  description = "URL of the Elastic Beanstalk environment"
+  value       = module.elastic_beanstalk.beanstalk_env_url
+}
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = module.s3_storage.s3_bucket_name
+}
