@@ -48,7 +48,7 @@ jobs:
           token: ${{ secrets.TOKEN_GITHUB }}
           author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
           branch: update-branch
-          base: development
+          base: main
           commit-message: "chore: Update Docker image versions in ${{ steps.updt.outputs.result }}"
           title: "chore: Update Docker image versions in ${{ steps.updt.outputs.result }}"
           delete-branch: false
