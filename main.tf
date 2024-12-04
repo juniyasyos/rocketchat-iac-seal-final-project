@@ -15,13 +15,12 @@ module "final-project-vpc" {
 
 # EC2 Instances
 resource "aws_instance" "this" {
-  for_each      = local.instances
-  ami           = each.value.ami
-  instance_type = each.value.instance_type
-  key_name      = module.final-project-vpc.keypair
-  # subnet_id                   = each.value.subnet_id
-  subnet_id                   = module.final-project-vpc.public_subnets[0]
-  security_groups             = module.final-project-vpc.frontend_ids
+  for_each                    = local.instances
+  ami                         = each.value.ami
+  instance_type               = each.value.instance_type
+  key_name                    = module.final-project-vpc.keypair
+  subnet_id                   = each.value.subnet_id
+  security_groups             = each.value.sg
   associate_public_ip_address = true
 
   root_block_device {
@@ -29,6 +28,7 @@ resource "aws_instance" "this" {
     volume_type           = "gp3"
     delete_on_termination = true
   }
+
   tags = {
     Name        = each.key
     Project     = local.project_name
@@ -37,11 +37,11 @@ resource "aws_instance" "this" {
 }
 
 module "elastic_beanstalk" {
-  source         = "./modules/elastic_beanstalk"
-  env            = var.env
-  instance_type  = var.instance_type
-  mongodb_url    = var.mongodb_url
-  root_url       = var.root_url
+  source        = "./modules/elastic_beanstalk"
+  env           = var.env
+  instance_type = var.instance_type
+  mongodb_url   = var.mongodb_url
+  root_url      = var.root_url
 }
 
 module "s3_storage" {
