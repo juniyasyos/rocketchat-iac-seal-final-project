@@ -55,14 +55,20 @@ const getDockerfileMatrixEntry = (file) => {
 };
 
 const generateBuildMatrix = (filesAdded, filesModified, filesRenamed) => {
-  const dockerfiles = [...new Set(getAffectedDockerfiles(filesAdded, filesModified, filesRenamed))];
+  const files = [...filesAdded, ...filesModified, ...filesRenamed];
 
-  const entries = dockerfiles.map(getDockerfileMatrixEntry);
+  if (files.some(file => file.endsWith('compose.yml'))) {
+    console.log('Relevant compose files changed, scheduling builds.');
 
-  // Return null if there are no entries so we can skip the matrix step
-  return entries.length
-    ? { include: entries }
-    : null;
+    return {
+      include: files.filter(file => file.endsWith('compose.yml')).map(file => ({
+        path: file,
+        version: file.includes('azzuri-dev') ? 'dev' : 'latest',
+      })),
+    };
+  }
+
+  return null; // No changes to schedule builds
 };
 
 module.exports = generateBuildMatrix;

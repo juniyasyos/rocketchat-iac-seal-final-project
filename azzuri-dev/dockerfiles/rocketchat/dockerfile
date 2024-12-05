@@ -1,0 +1,18 @@
+# Container rocketchat yang kita gunakan pada compose.yml sudah mengambil image dari
+# "registry.rocket.chat/rocketchat/rocket.chat" sehingga kita tidak perlu membuat dockerfile
+# baru. Dockerfile ini dibuat untuk kedepannya jika ada yg ingin eksperimen mem-build image
+# dari awal. 
+
+# Dockerfile for Rocket.Chat
+FROM registry.rocket.chat/rocketchat/rocket.chat:new-version
+
+# Set environment variables
+ENV ROOT_URL=https://localhost \
+    PORT=3000 \
+    DEPLOY_METHOD=docker
+
+# Expose the default application port
+EXPOSE 3000
+
+# Command to start Rocket.Chat
+CMD ["node", "main.js"]
