@@ -1,0 +1,99 @@
+# File ini sudah bisa mendeteksi perubahan di compose.yml maupun
+# azzuri-dev/compose.yml . Buat temen2 yg mau nambahin/coba2 pakaicompose file sendiri,
+# bisa tambahin di bagian (1) dan bagian (2).
+
+# PASTIKAN FILE COMPOSE SUDAH DICOBA DI LOCAL DAN BERHASIL JALAN (misal coba 
+# pakai docker desktop)
+
+# Sejauh ini, file ini hanya dibuat untuk mem-build docker compose. Belum sampai memastikan
+# bahwa container berjalan dengan sukses atau berhasil diakses.
+
+name: build-test
+
+on:
+  push:
+    branches:
+      - main
+    paths: # (1)
+      - "compose.yml"
+      - "azzuri-dev/compose.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths: # (2)
+      - "compose.yml"
+      - "azzuri-dev/compose.yml"
+
+jobs:
+  gen-matrix:
+    name: generate-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Calculate file differences
+        id: diff
+        uses: tj-actions/changed-files@v45
+        with:
+          json: true
+          escape_json: false
+
+      - name: Generate testing matrix
+        uses: actions/github-script@v7
+        id: generator
+        with:
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          script: |
+            const script = require(`${process.env.GITHUB_WORKSPACE}/genMatrix.js`)
+            return script(
+              ${{ steps.diff.outputs.added_files }},
+              ${{ steps.diff.outputs.modified_files }},
+              ${{ steps.diff.outputs.renamed_files }},
+            );
+
+      - name: Debug Matrix Output
+        run: echo "Matrix:${{ steps.generator.outputs.result }}"
+
+    outputs:
+      matrix: ${{ steps.generator.outputs.result }}
+
+  build:
+    if: ${{ fromJson(needs.gen-matrix.outputs.matrix) }}
+    needs: gen-matrix
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.gen-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Get short node version
+        uses: actions/github-script@v7
+        id: short-version
+        with:
+          result-encoding: string
+          script: |
+            const version = "${{ matrix.version }}".split('.');
+            return `${version[0]}.${version[1]}`
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug Matrix Path
+        run: echo "Matrix Path:${{ matrix.path }}"
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Run Compose
+        # working-directory: ${{ matrix.path }}
+        run: docker-compose up -d
+
+ 
