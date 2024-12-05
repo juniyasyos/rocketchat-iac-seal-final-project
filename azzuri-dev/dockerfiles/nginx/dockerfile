@@ -1,0 +1,20 @@
+# Container nginx  yang kita gunakan pada compose.yml sudah mengambil image dari
+# "nginx-new-version" (dari internet) sehingga kita tidak perlu membuat dockerfile
+# baru. Dockerfile ini dibuat untuk kedepannya jika ada yg ingin eksperimen mem-build image
+# dari awal. Konfigurasi container nginx diambil dari local (./nginx/default.conf)
+
+
+# Dockerfile for NGINX
+FROM nginx:new-version
+
+# Copy the NGINX configuration
+COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy SSL certificates
+COPY ./nginx/certs /etc/nginx/certs
+
+# Expose HTTP and HTTPS ports
+EXPOSE 80 443
+
+# Start NGINX
+CMD ["nginx", "-g", "daemon off;"]
