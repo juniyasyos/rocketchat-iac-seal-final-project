@@ -1,7 +1,25 @@
-# Container mongoDB yang kita gunakan pada compose.yml sudah mengambil image dari
-# "docker.io/bitnami/mongodb" di internet sehingga kita tidak perlu membuat dockerfile
-# baru. Dockerfile ini dibuat untuk kedepannya jika ada yg ingin eksperimen mem-build image
-# dari awal.
+# # Container mongoDB yang kita gunakan pada compose.yml sudah mengambil image dari
+# # "docker.io/bitnami/mongodb" di internet sehingga kita tidak perlu membuat dockerfile
+# # baru. Dockerfile ini dibuat untuk kedepannya jika ada yg ingin eksperimen mem-build image
+# # dari awal.
+
+# # Dockerfile for MongoDB
+# FROM bitnami/mongodb:6.0
+
+# # Set environment variables
+# ENV MONGODB_REPLICA_SET_MODE=primary \
+#     MONGODB_REPLICA_SET_NAME=rs0 \
+#     MONGODB_PORT_NUMBER=27017 \
+#     MONGODB_ENABLE_JOURNAL=true \
+#     ALLOW_EMPTY_PASSWORD=yes
+
+# # Expose the MongoDB default port
+# EXPOSE 27017
+
+# # Add a custom startup script if needed
+# # COPY ./custom-init-script.sh /docker-entrypoint-initdb.d/
+
+# CMD ["mongodb"]
 
 # Dockerfile for MongoDB
 FROM bitnami/mongodb:6.0
@@ -16,7 +34,5 @@ ENV MONGODB_REPLICA_SET_MODE=primary \
 # Expose the MongoDB default port
 EXPOSE 27017
 
-# Add a custom startup script if needed
-# COPY ./custom-init-script.sh /docker-entrypoint-initdb.d/
-
-CMD ["mongodb"]
+# You do not need to specify CMD or ENTRYPOINT here
+# The base image already has the default entrypoint

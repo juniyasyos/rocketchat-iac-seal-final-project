@@ -4,7 +4,7 @@
 # dari awal. 
 
 # Dockerfile for Rocket.Chat
-FROM registry.rocket.chat/rocketchat/rocket.chat:new-version
+FROM registry.rocket.chat/rocketchat/rocket.chat:latest
 
 # Set environment variables
 ENV ROOT_URL=https://localhost \

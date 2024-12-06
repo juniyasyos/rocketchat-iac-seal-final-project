@@ -5,7 +5,7 @@
 
 
 # Dockerfile for NGINX
-FROM nginx:new-version
+FROM nginx:latest
 
 # Copy the NGINX configuration
 COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
