@@ -13,6 +13,7 @@ module "final-project-vpc" {
   key_name           = var.key_name
 }
 
+
 # EC2 Instances
 resource "aws_instance" "this" {
   for_each      = local.instances

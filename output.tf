@@ -16,3 +16,10 @@ output "instance_security_group" {
   value       = [for instance in aws_instance.this : instance.security_groups]
 }
 
+output "eip-public" {
+  value = module.final-project-vpc.eip_public
+}
+
+output "eip-dns" {
+  value = module.final-project-vpc.eip_dns
+}

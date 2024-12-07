@@ -45,6 +45,42 @@
       name: "monitoring"
     when: "'tag_nginx_server' in group_names"
 
+  - name: Setup Application Rocket.Chat
+    block:
+    - name: Synchronize Rocket.Chat containerization files
+      ansible.posix.synchronize:
+        src: "../../templates/azzuri-dev/"
+        dest: "/home/{{ ansible_user }}/rocket-chat/"
+        mode: push
+        recursive: yes
+
+    - name: Ensure nginx certificates directory exists
+      file:
+        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
+        state: directory
+        mode: '0755'
+
+    - name: Generate SSL certificate and key if not exists
+      command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
+      args:
+        creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+
+    - name: Verify Docker Compose installation
+      command: docker compose version
+      register: docker_compose_check
+      failed_when: docker_compose_check.rc != 0
+      changed_when: false
+
+    - name: Start Rocket.Chat using Docker Compose
+      ansible.builtin.shell:
+        cmd: >
+          docker compose -f /home/{{ ansible_user }}/rocket-chat/docker-compose.yml up -d
+      args:
+        executable: /bin/bash
+      register: docker_compose_up
+      changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+    when: "'tag_nginx_server' in group_names"
   # - name: Configure Testing Environment
   #   block:
   #   - name: Apply testing role with required variables
