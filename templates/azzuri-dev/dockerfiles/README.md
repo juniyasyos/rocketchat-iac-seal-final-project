@@ -1,6 +1,6 @@
 ## How to use dockerfiles/
 
-1. arahkan dulu terminal ke direktori `azzuri-dev/`
+1. arahkan dulu terminal ke direktori `templates/azzuri-dev/`
 2. bikin image untuk tiap dockerfile
 `docker build -t mongodb-image -f dockerfiles/mongodb/dockerfile .`
 `docker build -t nginx-image -f dockerfiles/nginx/dockerfile .`
