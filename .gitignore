@@ -20,6 +20,7 @@ override.tf.json
 # Sensitive data logs
 .terraform/
 .terraform.lock.hcl
+*.pem
 
 # Ansible
 *.retry

@@ -19,6 +19,7 @@ Options:
   --skip-ansible      Lewati task Ansible.
   --plan-only         Jalankan 'terraform plan' saja.
   --env=<file>        Tentukan file environment (default: development.env).
+  --ansi=<file>       Tentukan file environment untuk ansible
   --help              Tampilkan bantuan.
 EOF
 }
@@ -69,14 +70,12 @@ run_terraform() {
 # Run Ansible Playbook
 run_ansible() {
   log "Menjalankan playbook Ansible"
-  ansible-playbook ./playbooks/setup/main.yaml
-
   # Cek jika ENV_FILE ditentukan, jika ya, tambahkan --extra-vars
-  # if [[ -n "$ENV_FILE" && -f "environment/$ENV_FILE" ]]; then
-  #   ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath environment/$ENV_FILE)"
-  # else
-  #   ansible-playbook ./playbooks/setup/main.yaml
-  # fi
+  if [[ -n "$ANSI_ENV" && -f "playbooks/$ANSI_ENV" ]]; then
+    ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath playbooks/$ANSI_ENV)"
+  else
+    ansible-playbook ./playbooks/setup/main.yaml
+  fi
 }
 
 # Setup Python virtual environment
@@ -106,6 +105,7 @@ SKIP_APPLY=false
 SKIP_ANSIBLE=false
 PLAN_ONLY=false
 ENV_FILE="development.env"
+ANSI_ENV=""
 
 # Parsing options from command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -115,6 +115,7 @@ while [[ "$#" -gt 0 ]]; do
   --skip-ansible) SKIP_ANSIBLE=true ;;
   --plan-only) PLAN_ONLY=true ;;
   --env=*) ENV_FILE="${1#*=}" ;;
+  --ansi=*) ANSI_ENV="${1#*=}" ;;
   --help)
     show_help
     exit 0

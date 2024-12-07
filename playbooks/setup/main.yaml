@@ -1,5 +1,5 @@
 ---
-- name: Deploy Grafana K6 Configuration to Remote Servers
+- name: Setup global configuration rocket chat
   hosts: all
   become: true
   gather_facts: true

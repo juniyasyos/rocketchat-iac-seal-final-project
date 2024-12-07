@@ -15,15 +15,18 @@ variable "azs" {
   type        = list(string)
 
 }
+
 variable "private_subnets" {
-  description = "private subnets"
-  type        = list(string)
-
+  default = []
 }
-variable "public_subnets" {
-  description = "public subnets"
-  type        = list(string)
 
+variable "public_subnets" {
+  default = []
+}
+
+variable "ip_secure" {
+  description = "add your ip address"
+  default     = ["160.187.37.4/32"]
 }
 
 variable "aws_region" {
@@ -31,10 +34,15 @@ variable "aws_region" {
   type        = string
 }
 
-variable "instance_type" {
+variable "instance_type_micro" {
   description = "ec2 instance type"
   type        = string
 }
+
+# variable "instance_type_app" {
+#   description = "ec2 instance type"
+#   type        = string
+# }
 
 variable "instance_storage" {
   description = "ec2 instance volume storage"
