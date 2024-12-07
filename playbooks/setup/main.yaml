@@ -20,6 +20,8 @@
         msg:
         - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
         - "Nginx IP: {{ ip_target_testing | default('Not defined') }}"
+    tags:
+      - get-ip
 
   - name: Ensure Docker is installed
     block:
