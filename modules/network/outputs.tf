@@ -13,7 +13,7 @@ output "keypair" {
 
 output "vpc_id" {
   value = module.vpc.vpc_id
-  
+
 }
 
 # # Output untuk CIDR Blocks public_subnets
