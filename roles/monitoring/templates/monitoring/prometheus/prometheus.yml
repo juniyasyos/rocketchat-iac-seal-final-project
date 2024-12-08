@@ -1,26 +1,57 @@
-# my global config
+# Global Configurations
 global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-  # scrape_timeout is set to the global default (10s).
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds.
+  scrape_timeout: 10s # Timeout for scraping a target.
 
+# Define alerting rules file
 rule_files:
-  - alert_rules.yml
+- alert_rules.yml
 
+# Define alertmanager configuration
 alerting:
   alertmanagers:
-    - scheme: http
-      static_configs:
-        - targets: [ 'alertmanager:9093' ]
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: "prometheus"
-    
-    scrape_interval: 5s
-
+  - scheme: http
     static_configs:
-      - targets: ["node-exporter:9100"]
-      - targets: ['nginx-prometheus-exporter:9113']
+    - targets: [ 'alertmanager:9093' ]
+
+# Scraping configurations
+scrape_configs:
+- job_name: 'prometheus'
+  scrape_interval: 5s
+  static_configs:
+  - targets: [ 'node-exporter:9100' ]
+    labels:
+      job: 'node_exporter'
+      instance: 'nginx_server'
+  - targets: [ 'nginx-prometheus-exporter:9113' ]
+    # - targets: ['http://44.219.251.100:9113']
+    labels:
+      job: 'nginx_exporter'
+      instance: 'nginx_server'
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: instance
+  - source_labels: [ job ]
+    target_label: job
+
+- job_name: 'nginx'
+  scrape_interval: 10s
+  static_configs:
+  - targets: [ 'nginx:433' ]
+    labels:
+      job: 'nginx'
+      instance: 'nginx_server'
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: instance
+# - job_name: 'mongodb'
+#   scrape_interval: 30s
+#   static_configs:
+#     - targets: ['mongodb-exporter:9216']
+#       labels:
+#         job: 'mongodb_exporter'
+#         instance: 'mongodb_server'
+#   relabel_configs:
+#     - source_labels: [__address__]
+#       target_label: instance

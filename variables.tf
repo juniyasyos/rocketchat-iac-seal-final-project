@@ -39,10 +39,10 @@ variable "instance_type_micro" {
   type        = string
 }
 
-# variable "instance_type_app" {
-#   description = "ec2 instance type"
-#   type        = string
-# }
+variable "instance_type_app" {
+  description = "ec2 instance type"
+  type        = string
+}
 
 variable "instance_storage" {
   description = "ec2 instance volume storage"

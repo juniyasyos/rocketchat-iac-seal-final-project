@@ -18,8 +18,3 @@ module "vpc" {
     Environment = var.env
   }
 }
-
-resource "aws_eip" "eip" {
-  depends_on = [module.vpc]
-  domain     = "vpc"
-}

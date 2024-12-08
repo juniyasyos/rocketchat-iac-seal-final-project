@@ -17,9 +17,9 @@ output "instance_security_group" {
 }
 
 output "eip-public" {
-  value = module.final-project-vpc.eip_public
+  value = aws_eip.nginx.public_ip
 }
 
 output "eip-dns" {
-  value = module.final-project-vpc.eip_dns
+  value = aws_eip.nginx.public_dns
 }

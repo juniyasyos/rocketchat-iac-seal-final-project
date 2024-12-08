@@ -20,13 +20,12 @@ resource "aws_security_group" "frontend" {
 
   # Akses terbatas pada IP spesifik untuk berbagai port
   dynamic "ingress" {
-    for_each = [3000, 3030, 9000, 9090, 9099]
+    for_each = { for port in [3000, 3030, 9000, 9090, 9099] : port => var.ip_secure }
     content {
-      from_port   = ingress.value
-      to_port     = ingress.value
+      from_port   = ingress.key
+      to_port     = ingress.key
       protocol    = "tcp"
-      cidr_blocks = var.ip_secure
-      # cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ingress.value
     }
   }
 
@@ -36,7 +35,6 @@ resource "aws_security_group" "frontend" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = var.ip_secure
-    # cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Semua lalu lintas keluar diperbolehkan

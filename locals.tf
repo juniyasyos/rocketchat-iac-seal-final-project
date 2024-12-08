@@ -19,12 +19,12 @@ locals {
     }
     nginx-server = {
       ami           = data.aws_ami.ubuntu.id
-      instance_type = "t3.large"
+      instance_type = var.instance_type_app
     }
-    # app-server = {
-    #   ami           = data.aws_ami.ubuntu.id
-    #   instance_type = var.instance_type_app
-    # }
+    monitoring-server = {
+      ami           = data.aws_ami.ubuntu.id
+      instance_type = var.instance_type_micro
+    }
     # db-server = {
     #   ami           = data.aws_ami.ubuntu.id
     #   instance_type = var.instance_type_app
