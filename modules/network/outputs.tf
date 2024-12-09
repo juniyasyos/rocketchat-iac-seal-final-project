@@ -2,23 +2,26 @@ output "private_subnets" {
   description = "private_subnets"
   value       = module.vpc.private_subnets
 }
+
 output "public_subnets" {
   description = "public_subnets"
   value       = module.vpc.public_subnets
 }
 
-output "frontend_ids" {
-  description = "security group ids returned for rds"
-  value       = [aws_security_group.frontend.id]
-}
-
-output "backend_ids" {
-  description = "security group ids returned for rds"
-  value       = [aws_security_group.backend.id]
-}
-
 output "keypair" {
   value = aws_key_pair.deployer.key_name
+}
+
+output "vpc_id" {
+  value = module.vpc.vpc_id
+}
+
+output "alb_arn" {
+  value = aws_lb.application.arn
+}
+
+output "alb_dns_name" {
+  value = aws_lb.application.dns_name
 }
 
 # # Output untuk CIDR Blocks public_subnets
