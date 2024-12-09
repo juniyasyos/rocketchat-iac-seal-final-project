@@ -10,6 +10,26 @@ resource "aws_elastic_beanstalk_environment" "rocket_chat_env" {
   application         = aws_elastic_beanstalk_application.rocket_chat.name
   solution_stack_name = "64bit Amazon Linux 2 v3.4.11 running Docker"
 
+  # Configuration for Load Balancer (ALB)
+  setting {
+    namespace = "aws:elb:loadbalancer"
+    name      = "LoadBalancerType"
+    value     = "application"
+  }
+
+  setting {
+    namespace = "aws:elb:listener"
+    name      = "ListenerProtocol"
+    value     = "HTTP"
+  }
+
+  setting {
+    namespace = "aws:elb:targetgroup"
+    name      = "TargetGroupARN"
+    value     = module.network.alb_target_group_arn
+  }
+
+  # Autoscaling Configuration
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "InstanceType"
@@ -28,6 +48,7 @@ resource "aws_elastic_beanstalk_environment" "rocket_chat_env" {
     value     = "3"
   }
 
+  # Application environment variables
   setting {
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "MONGO_URL"
