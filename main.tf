@@ -2,11 +2,11 @@ module "final-project-vpc" {
   source   = "./modules/network"
   vpc_name = var.vpc_name
   env      = var.env
-  cidr     = var.vpc_cidr
+  cidr     = local.resolved_vpc_cidr
 
   azs             = var.azs
-  private_subnets = var.private_subnets
-  public_subnets  = var.public_subnets
+  private_subnets = local.resolved_private_subnets
+  public_subnets  = local.resolved_public_subnets
 
   enable_nat_gateway = true
   enable_vpn_gateway = false
@@ -19,9 +19,13 @@ resource "aws_instance" "this" {
   ami           = each.value.ami
   instance_type = each.value.instance_type
   key_name      = module.final-project-vpc.keypair
-  # subnet_id                   = each.value.subnet_id
+  # subnet_id = module.final-project-vpc.public_subnets[lookup({
+  #   "testing-server" = 1,
+  #   "nginx-server"   = 1,
+  #   "app-server"     = 1,
+  # }, each.key)]
   subnet_id                   = module.final-project-vpc.public_subnets[0]
-  security_groups             = module.final-project-vpc.frontend_ids
+  security_groups             = [aws_security_group.frontend.id]
   associate_public_ip_address = true
 
   root_block_device {
@@ -29,9 +33,16 @@ resource "aws_instance" "this" {
     volume_type           = "gp3"
     delete_on_termination = true
   }
+
   tags = {
     Name        = each.key
     Project     = local.project_name
     Environment = local.environment
   }
+}
+
+# Elastic IP hanya untuk nginx-server
+resource "aws_eip" "nginx" {
+  domain   = "vpc"
+  instance = aws_instance.this["nginx-server"].id
 }

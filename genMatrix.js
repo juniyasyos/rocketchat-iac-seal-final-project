@@ -63,7 +63,7 @@ const generateBuildMatrix = (filesAdded, filesModified, filesRenamed) => {
     return {
       include: files.filter(file => file.endsWith('compose.yml')).map(file => ({
         path: file,
-        version: file.includes('azzuri-dev') ? 'dev' : 'latest',
+        version: file.includes('templates/azzuri-dev') ? 'dev' : 'latest',
       })),
     };
   }

@@ -1,5 +1,5 @@
 # File ini sudah bisa mendeteksi perubahan di compose.yml maupun
-# azzuri-dev/compose.yml . Buat temen2 yg mau nambahin/coba2 pakaicompose file sendiri,
+# templates/azzuri-dev/compose.yml . Buat temen2 yg mau nambahin/coba2 pakaicompose file sendiri,
 # bisa tambahin di bagian (1) dan bagian (2).
 
 # PASTIKAN FILE COMPOSE SUDAH DICOBA DI LOCAL DAN BERHASIL JALAN (misal coba 
@@ -16,14 +16,14 @@ on:
       - main
     paths: # (1)
       - "compose.yml"
-      - "azzuri-dev/compose.yml"
+      - "templates/azzuri-dev/compose.yml"
 
   pull_request:
     branches:
       - main
     paths: # (2)
       - "compose.yml"
-      - "azzuri-dev/compose.yml"
+      - "templates/azzuri-dev/compose.yml"
 
 jobs:
   gen-matrix:

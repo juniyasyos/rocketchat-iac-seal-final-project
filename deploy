@@ -2,13 +2,7 @@
 
 set -e
 
-# Check if the script is run as root
-if [ "$(id -u)" -ne 0 ]; then
-  echo "Error: Skrip ini harus dijalankan sebagai root." >&2
-  exit 1
-fi
-
-# Display help message
+# Fungsi untuk menampilkan bantuan
 show_help() {
   cat <<EOF
 Usage: $0 [options]
@@ -19,6 +13,8 @@ Options:
   --skip-ansible      Lewati task Ansible.
   --plan-only         Jalankan 'terraform plan' saja.
   --env=<file>        Tentukan file environment (default: development.env).
+  --ansi=<file>       Tentukan file environment untuk ansible.
+  --destroy           Hancurkan semua infrastruktur.
   --help              Tampilkan bantuan.
 EOF
 }
@@ -27,37 +23,34 @@ log() {
   echo "[$(date +'%Y-%m-%d %H:%M:%S')] $@"
 }
 
-# Check if required files or directories exist
-check_file_exists() {
-  local file="$1"
-  if [ ! -f "$file" ]; then
-    echo "Error: File '$file' tidak ditemukan." >&2
+# Cek apakah file atau direktori ada
+check_exists() {
+  local path="$1"
+  if [[ ! -e "$path" ]]; then
+    echo "Error: $path tidak ditemukan." >&2
     exit 1
   fi
 }
 
-check_directory_exists() {
-  local dir="$1"
-  if [ ! -d "$dir" ]; then
-    echo "Error: Direktori '$dir' tidak ditemukan." >&2
-    exit 1
-  fi
-}
-
-# Initialize Terraform and apply or plan
+# Inisialisasi Terraform
 run_terraform() {
   log "Inisialisasi Terraform"
   terraform init
+  terraform fmt --recursive
+  terraform validate
 
   local env_file_opt=""
   if [[ -n "$ENV_FILE" ]]; then
+    check_exists "environment/$ENV_FILE"
     env_file_opt="-var-file=environment/$ENV_FILE"
-    check_file_exists "environment/$ENV_FILE"
   fi
 
   if [[ "$PLAN_ONLY" == true ]]; then
     log "Menjalankan terraform plan $env_file_opt"
     terraform plan $env_file_opt
+  elif [[ "$DESTROY" == true ]]; then
+    log "Menjalankan terraform destroy $env_file_opt"
+    terraform destroy -auto-approve $env_file_opt
   elif [[ "$SKIP_APPLY" == false ]]; then
     log "Menjalankan terraform apply $env_file_opt"
     terraform apply -auto-approve $env_file_opt
@@ -66,84 +59,69 @@ run_terraform() {
   fi
 }
 
-# Run Ansible Playbook
+# Menjalankan Ansible Playbook
 run_ansible() {
   log "Menjalankan playbook Ansible"
-  ansible-playbook ./playbooks/setup/main.yaml
-
-  # Cek jika ENV_FILE ditentukan, jika ya, tambahkan --extra-vars
-  # if [[ -n "$ENV_FILE" && -f "environment/$ENV_FILE" ]]; then
-  #   ansible-playbook ./playbooks/setup/main.yaml --extra-vars "@/$(realpath environment/$ENV_FILE)"
-  # else
-  #   ansible-playbook ./playbooks/setup/main.yaml
-  # fi
+  local ansible_env_opt=""
+  if [[ -n "$ANSI_ENV" ]]; then
+    check_exists "playbooks/$ANSI_ENV"
+    ansible_env_opt="--extra-vars @$(realpath playbooks/$ANSI_ENV)"
+  fi
+  ansible-playbook ./playbooks/setup/main.yaml $ansible_env_opt
 }
 
-# Setup Python virtual environment
+# Setup Virtual Environment Python
 setup_python_env() {
   log "Menyiapkan Python Virtual Environment (.venv)"
+  check_exists "requirements.txt"
 
-  # Pastikan requirements.txt ada sebelum membuat virtual environment
-  check_file_exists "requirements.txt"
-
-  # Jika .venv belum ada, buatlah
-  if [ ! -d .venv ]; then
+  if [[ ! -d .venv ]]; then
     python3 -m venv .venv
   fi
 
-  # Aktifkan virtual environment
   source .venv/bin/activate
-
-  # Install dependencies jika requirements.txt ada
-  if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
-  fi
+  pip install -r requirements.txt
 }
 
-# Default flags and values
+# Parsing options dari command-line arguments
 TASK_ALL=true
 SKIP_APPLY=false
 SKIP_ANSIBLE=false
 PLAN_ONLY=false
 ENV_FILE="development.env"
+ANSI_ENV=""
+DESTROY=false
 
-# Parsing options from command-line arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-  --task-all) TASK_ALL=true ;;
-  --skip-apply) SKIP_APPLY=true ;;
-  --skip-ansible) SKIP_ANSIBLE=true ;;
-  --plan-only) PLAN_ONLY=true ;;
-  --env=*) ENV_FILE="${1#*=}" ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    echo "Unknown option: $1"
-    show_help
-    exit 1
-    ;;
+    --task-all) TASK_ALL=true ;;
+    --skip-apply) SKIP_APPLY=true ;;
+    --skip-ansible) SKIP_ANSIBLE=true ;;
+    --plan-only) PLAN_ONLY=true ;;
+    --env=*) ENV_FILE="${1#*=}" ;;
+    --ansi=*) ANSI_ENV="${1#*=}" ;;
+    --destroy) DESTROY=true ;;
+    --help) show_help; exit 0 ;;
+    *) echo "Unknown option: $1"; show_help; exit 1 ;;
   esac
   shift
 done
 
-# Ensure required files and directories exist before proceeding
-check_directory_exists "./playbooks"
-check_file_exists "./requirements.txt"
+# Validasi direktori dan file sebelum melanjutkan
+check_exists "./playbooks"
+check_exists "./requirements.txt"
 
-# Setup Python environment
+# Setup virtual environment
 setup_python_env
 
-# Execute Terraform if necessary
-if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == false ]]; then
+# Menjalankan Terraform sesuai opsi
+if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == false || "$DESTROY" == true ]]; then
   run_terraform
 fi
 
-# Execute Ansible if necessary
-if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false ]]; then
+# Menjalankan Ansible jika diperlukan
+if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false && "$DESTROY" == false ]]; then
   run_ansible
 fi
 
 log "Deployment selesai."
-ansible-inventory --graph

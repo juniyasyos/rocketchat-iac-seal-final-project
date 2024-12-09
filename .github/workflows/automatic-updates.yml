@@ -23,7 +23,7 @@ jobs:
             const workspace = process.env.GITHUB_WORKSPACE;
             const files = [
               path.join(workspace, 'compose.yml'),
-              path.join(workspace, 'azzuri-dev/compose.yml')
+              path.join(workspace, 'templates/azzuri-dev/compose.yml')
             ];
             
             let updatedFiles = [];

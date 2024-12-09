@@ -20,7 +20,7 @@ override.tf.json
 # Sensitive data logs
 .terraform/
 .terraform.lock.hcl
-
+*.pem
 # Ansible
 *.retry
 *.vault
@@ -52,4 +52,8 @@ Thumbs.db
 /environment/*.env
 
 # self signed SSL certificate 
-azzuri-dev/nginx/certs/
+templates/azzuri-dev/nginx/certs/
+
+templates/azzuri-dev/separated-mongodb/.env
+templates/azzuri-dev/separated-mongodb/nginx/certs
+azzuri-dev/nginx

@@ -16,3 +16,10 @@ output "instance_security_group" {
   value       = [for instance in aws_instance.this : instance.security_groups]
 }
 
+output "eip-public" {
+  value = aws_eip.nginx.public_ip
+}
+
+output "eip-dns" {
+  value = aws_eip.nginx.public_dns
+}

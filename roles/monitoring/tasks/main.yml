@@ -1,16 +1,21 @@
 ---
-# tasks file for setup tools monitoring
-- name: Check if Docker is installed
-  ansible.builtin.command:
-    cmd: docker --version
-  register: docker_installed
-  failed_when: false
-  changed_when: false
+# # tasks file for setup tools monitoring
+# - name: Check if Docker is installed
+#   ansible.builtin.command:
+#     cmd: docker --version
+#   register: docker_installed
+#   failed_when: false
+#   changed_when: false
 
-- name: setup docker and docker-compose
-  ansible.builtin.include_role:
-    name: docker
-  when: docker_installed.rc != 0
+# - name: Setup Docker and Docker Compose
+#   ansible.builtin.include_role:
+#     name: docker
+#   when: docker_installed.rc != 0
+
+- name: Check if monitoring_config folder exists
+  stat:
+    path: /home/{{ ansible_user }}/monitoring_config/
+  register: monitoring_folder
 
 - name: Synchronize folder to remote server
   ansible.posix.synchronize:
@@ -18,6 +23,7 @@
     dest: /home/{{ ansible_user }}/monitoring_config/
     mode: push
     recursive: yes
+  when: not monitoring_folder.stat.exists
 
 - name: Ensure Docker Compose is up
   ansible.builtin.shell:

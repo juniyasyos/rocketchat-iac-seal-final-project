@@ -1,4 +1,4 @@
-Directory azzuri-dev/ gua pake untuk development dan coba-coba. Sejauh ini, container rocketchat bisa dijalankan dan diakses via https://localhost. Berikut stepnya:
+Directory templates/azzuri-dev/ gua pake untuk development dan coba-coba. Sejauh ini, container rocketchat bisa dijalankan dan diakses via https://localhost. Berikut stepnya:
 
 1. Pastikan sudah menginstall docker-compose dan docker desktop (klo ada alternatif lain silahkan coba)
 2. Buat SSL certificate menggunakan `openssl`, simpan dalam folder `nginx/certs/`. Pastikan ada file `.crt` dan `.key`

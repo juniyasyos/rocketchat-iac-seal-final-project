@@ -5,7 +5,7 @@ volumes:
 
 services:
   rocketchat:
-    image: ${IMAGE:-registry.rocket.chat/rocketchat/rocket.chat}:${RELEASE:-new-version}
+    image: ${IMAGE:-registry.rocket.chat/rocketchat/rocket.chat}:${RELEASE:-latest}
     restart: always
     environment:
       MONGO_URL: "${MONGO_URL:-\
@@ -40,7 +40,7 @@ services:
       ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD:-yes}
 
   nginx:
-    image: nginx:new-version
+    image: nginx:latest
     restart: always
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
