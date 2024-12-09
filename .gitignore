@@ -53,3 +53,7 @@ Thumbs.db
 
 # self signed SSL certificate 
 templates/azzuri-dev/nginx/certs/
+
+templates/azzuri-dev/separated-mongodb/.env
+templates/azzuri-dev/separated-mongodb/nginx/certs
+azzuri-dev/nginx
