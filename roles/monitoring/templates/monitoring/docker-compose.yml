@@ -1,6 +1,8 @@
+version: '3.9'
+
 services:
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     container_name: prometheus
     ports:
       - '9099:9090'
@@ -12,30 +14,50 @@ services:
       - '--web.enable-lifecycle'
     restart: always
     user: root
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - monitoring
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     container_name: grafana-server
     ports:
       - '3030:3000'
     volumes:
       - ./grafana/data:/var/lib/grafana
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: always
     user: root
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=my-password-grafana
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+    networks:
+      - monitoring
 
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node-exporter
     ports:
-      - 9100:9100
+      - '9100:9100'
+    restart: always
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   alertmanager:
-    image: prom/alertmanager
+    image: prom/alertmanager:latest
+    container_name: alertmanager
     ports:
       - '9093:9093'
     volumes:
@@ -43,16 +65,35 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
     restart: always
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9093/-/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   nginx-prometheus-exporter:
-    image: nginx/nginx-prometheus-exporter:1.0
+    image: nginx/nginx-prometheus-exporter:latest
     container_name: prometheus-nginx-exporter
     restart: always
-    env_file:
-      .env
+    env_file: .env
     command:
-      - -nginx.scrape-uri=http://nginx/stub_status
+      - '-nginx.scrape-uri=http://nginx/stub_status'
     expose:
-      - 9113
+      - '9113'
     depends_on:
       - prometheus
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9113/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      SCRAPE_URI: "http://nginx/stub_status"
+
+networks:
+  monitoring:
+    driver: bridge

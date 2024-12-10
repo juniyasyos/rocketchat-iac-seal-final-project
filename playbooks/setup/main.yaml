@@ -42,11 +42,6 @@
       ansible.builtin.fail:
         msg: "Docker installation failed. Check Docker role or system configuration."
 
-  - name: Apply Monitoring setup
-    ansible.builtin.include_role:
-      name: "monitoring"
-    when: "'tag_nginx_server' in group_names"
-
   - name: Setup Application Rocket.Chat
     block:
     - name: Synchronize Rocket.Chat containerization files
@@ -83,6 +78,12 @@
       register: docker_compose_up
       changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
     when: "'tag_nginx_server' in group_names"
+
+  - name: Apply Monitoring setup
+    ansible.builtin.include_role:
+      name: "monitoring"
+    when: "'tag_nginx_server' in group_names"
+    
   # - name: Configure Testing Environment
   #   block:
   #   - name: Apply testing role with required variables
