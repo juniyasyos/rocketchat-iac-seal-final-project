@@ -13,10 +13,10 @@ locals {
   resolved_private_subnets = length(var.private_subnets) > 0 ? var.private_subnets : local.default_private_subnets
   resolved_public_subnets  = length(var.public_subnets) > 0 ? var.public_subnets : local.default_public_subnets
   instances = {
-    testing-server = {
-      ami           = data.aws_ami.ubuntu.id
-      instance_type = var.instance_type_micro
-    }
+    # testing-server = {
+    #   ami           = data.aws_ami.ubuntu.id
+    #   instance_type = var.instance_type_micro
+    # }
     nginx-server = {
       ami           = data.aws_ami.ubuntu.id
       instance_type = var.instance_type_app

@@ -1,0 +1,31 @@
+- name: Synchronize Rocket.Chat containerization files
+  ansible.posix.synchronize:
+    src: "../../templates/azzuri-dev/separated-mongodb/"
+    dest: "/home/{{ ansible_user }}/rocket-chat/"
+    mode: push
+    recursive: yes
+
+- name: Generate replica set key for MongoDB
+  ansible.builtin.shell: "openssl rand -base64 756 | tr -d '\\n'"
+  register: replica_set_key
+  changed_when: false
+
+- name: Create .env file for MongoDB
+  ansible.builtin.copy:
+    dest: "/home/{{ ansible_user }}/rocket-chat/.env"
+    content: |
+      MONGODB_VERSION=6.0
+      MONGODB_REPLICA_SET_NAME=rs0
+      MONGODB_ADVERTISED_HOSTNAME={{ ip_db_server }}
+      MONGODB_ENABLE_JOURNAL=true
+      ALLOW_EMPTY_PASSWORD=no
+      MONGODB_ROOT_USER=rocket-chat-mongo-db-super-secret
+      MONGODB_ROOT_PASSWORD=password-development-server-mongodb
+      MONGODB_REPLICA_SET_KEY={{ replica_set_key.stdout }}
+      MONGODB_HOST={{ ip_db_server }}
+      MONGODB_PORT_NUMBER=27017
+      MONGODB_DATABASE=rocketchat
+      MONGO_AUTH_SOURCE=rocket-chat-mongo-db-super-secret
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
