@@ -1,0 +1,9 @@
+---
+- name: Setup global configuration for Rocket.Chat
+  hosts: tag_monitoring_server
+  become: true
+  gather_facts: true
+
+  tasks:
+  - name: Apply Monitoring setup
+    ansible.builtin.include_tasks: monitoring.yaml

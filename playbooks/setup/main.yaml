@@ -11,7 +11,7 @@
       set_fact:
         ip_server_testing: "{{ hostvars[groups['tag_testing_server'][0]].ansible_default_ipv4.address | default('') }}"
 
-    - name: Get private IP of frontend server
+    - name: Get private IP of frontend server (nginx)
       set_fact:
         ip_nginx_server: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
 
@@ -23,15 +23,43 @@
       set_fact:
         ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
 
-    - name: Debug IP addresses
-      ansible.builtin.debug:
-        msg:
-        - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
-        - "Frontend IP: {{ ip_nginx_server | default('Not defined') }}"
-        - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
-        - "Database IP: {{ ip_db_server | default('Not defined') }}"
-    tags:
-    - get-ip
+  - name: Debug IP addresses
+    ansible.builtin.debug:
+      msg:
+      - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
+      - "Frontend (nginx) IP: {{ ip_nginx_server | default('Not defined') }}"
+      - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
+      - "Database IP: {{ ip_db_server | default('Not defined') }}"
+
+  - name: Instal Telnet
+    apt:
+      name: telnet
+      state: present
+    when: "'tag_nginx_server' in group_names or 'tag_db_server' in group_names"
+
+  - name: Izinkan koneksi SSH
+    ufw:
+      rule: allow
+      port: ssh
+      proto: tcp
+
+  - name: Aktifkan UFW
+    ufw:
+      state: enabled
+
+  - name: Open port 433 on nginx server (inbound to DB)
+    ufw:
+      rule: allow
+      port: '433'
+      proto: tcp
+    when: "'tag_nginx_server' in group_names"
+
+  - name: Open port 27017 on DB server (inbound to Nginx)
+    ufw:
+      rule: allow
+      port: '27017'
+      proto: tcp
+    when: "'tag_db_server' in group_names"
 
   - name: Ensure Docker is installed
     block:
@@ -56,70 +84,65 @@
     ansible.builtin.include_tasks: application.yaml
     when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
 
-  # - name: Start MongoDB Server
-  #   ansible.builtin.shell: >
-  #     docker compose -f /home/{{ ansible_user }}/rocket-chat/mongodb.yml up -d
-  #   register: docker_compose_up
-  #   changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
-  #   when: "'tag_db_server' in group_names"
+  - name: Start MongoDB Server
+    ansible.builtin.shell: >
+      docker compose -f /home/{{ ansible_user }}/rocket-chat/mongodb.yml up -d
+    register: docker_compose_up
+    changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+    when: "'tag_db_server' in group_names"
 
-  # - name: Setup Rocket.Chat Server
-  #   block:
-  #   - name: Ensure nginx certificates directory exists
-  #     ansible.builtin.file:
-  #       path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
-  #       state: directory
-  #       mode: '0755'
+  - name: Setup Rocket.Chat Server
+    block:
+    - name: Ensure nginx certificates directory exists
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
+        state: directory
+        mode: '0755'
 
-  #   - name: Generate SSL certificate and key if not exists
-  #     ansible.builtin.command: >
-  #       openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
-  #     args:
-  #       creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+    - name: Generate SSL certificate and key if not exists
+      ansible.builtin.command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
+      args:
+        creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
 
-  #   - name: Start Rocket.Chat using Docker Compose
-  #     ansible.builtin.shell: >
-  #       docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
-  #     register: docker_compose_up
-  #     changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
-  #   when: "'tag_nginx_server' in group_names"
+    - name: Start Rocket.Chat using Docker Compose
+      ansible.builtin.shell: >
+        docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
+      register: docker_compose_up
+      changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+    when: "'tag_nginx_server' in group_names"
 
-  # - name: Test Connections
-  #   block:
-  #   - name: Test connectivity to MongoDB server from Nginx Server
-  #     ansible.builtin.shell: >
-  #       telnet {{ ip_db_server }} 27017
-  #     register: telnet_result
-  #     failed_when: "'Connected' not in telnet_result.stdout"
-  #     changed_when: false
-  #     when: "'tag_nginx_server' in group_names"
+  - name: Test Connections
+    block:
+    # - name: Test connectivity to MongoDB server from Nginx Server
+    #   uri:
+    #     url: "http://{{ ip_db_server }}"
+    #     method: GET
+    #     status_code: 200
+    #   when: "'tag_nginx_server' in group_names"
 
-  #   - name: Test connectivity to Nginx server from MongoDB Server
-  #     ansible.builtin.shell: >
-  #       telnet {{ ip_nginx_server }} 433
-  #     register: telnet_result
-  #     failed_when: "'Connected' not in telnet_result.stdout"
-  #     changed_when: false
-  #     when: "'tag_db_server' in group_names"
-  #   when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
+    # - name: Test connectivity to Nginx server from MongoDB Server
+    #   uri:
+    #     url: "http://{{ ip_nginx_server }}"
+    #     method: GET
+    #     status_code: 200
+    #   when: "'tag_db_server' in group_names"
 
-  - name: Apply Monitoring setup
-    ansible.builtin.include_tasks: monitoring.yaml
-    when: "'tag_monitoring_server' in group_names"
+    - name: Test telnet connectivity to MongoDB server from Nginx Server
+      wait_for:
+        host: "{{ ip_db_server }}"
+        port: 27017
+        timeout: 5
+      when: "'tag_nginx_server' in group_names"
 
-
-  # - name: Configure Testing Environment
-  #   block:
-  #   - name: Apply testing role with required variables
-  #     ansible.builtin.include_role:
-  #       name: "{{ testing_role }}"
-  #     vars:
-  #       ip_target: "{{ ip_target_frontend }}"
-  #       ip_server: "{{ ip_target_testing }}"
-  #     when: "'tag_testing_server' in group_names"
-
-  #   rescue:
-  #   - name: Handle testing setup failure
-  #     ansible.builtin.debug:
-  #       msg: "Testing setup failed, but continuing deployment."
+    - name: Test telnet connectivity to Nginx server from MongoDB Server
+      wait_for:
+        host: "{{ ip_nginx_server }}"
+        port: 433
+        timeout: 5
+      when: "'tag_db_server' in group_names"
+    when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
+  # - name: Apply Monitoring setup
+  #   ansible.builtin.include_tasks: monitoring.yaml
+  #   when: "'tag_monitoring_server' in group_names"
 

@@ -20,7 +20,7 @@ resource "aws_instance" "this" {
   instance_type               = each.value.instance_type
   key_name                    = module.final-project-vpc.keypair
   subnet_id                   = module.final-project-vpc.public_subnets[0]
-  security_groups             = [aws_security_group.frontend.id]
+  security_groups             = each.value.sg
   associate_public_ip_address = true
 
   root_block_device {
@@ -41,23 +41,3 @@ resource "aws_eip" "nginx" {
   domain   = "vpc"
   instance = aws_instance.this["nginx-server"].id
 }
-
-# resource "aws_instance" "monitoring-server" {
-#   ami             = data.aws_ami.ubuntu
-#   instance_type   = var.instance_type_micro
-#   key_name        = module.final-project-vpc.keypair
-#   subnet_id       = module.final-project-vpc.public_subnets[0]
-#   security_groups = [aws_security_group.frontend.id]
-
-#   root_block_device {
-#     volume_size           = var.instance_storage
-#     volume_type           = "gp3" 
-#     delete_on_termination = true
-#   }
-
-#   tags = {
-#     Name        = "monitoring-server"
-#     Project     = local.project_name
-#     Environment = local.environment
-#   }
-# }

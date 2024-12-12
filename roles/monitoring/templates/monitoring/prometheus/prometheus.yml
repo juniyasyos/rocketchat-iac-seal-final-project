@@ -25,7 +25,6 @@ scrape_configs:
       job: 'node_exporter'
       instance: 'nginx_server'
   - targets: [ 'nginx-prometheus-exporter:9113' ]
-    # - targets: ['http://44.219.251.100:9113']
     labels:
       job: 'nginx_exporter'
       instance: 'nginx_server'
