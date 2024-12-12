@@ -47,10 +47,10 @@
     ufw:
       state: enabled
 
-  - name: Open port 433 on nginx server (inbound to DB)
+  - name: Open port 443 on nginx server (inbound to DB)
     ufw:
       rule: allow
-      port: '433'
+      port: '443'
       proto: tcp
     when: "'tag_nginx_server' in group_names"
 
@@ -138,7 +138,7 @@
     - name: Test telnet connectivity to Nginx server from MongoDB Server
       wait_for:
         host: "{{ ip_nginx_server }}"
-        port: 433
+        port: 443
         timeout: 5
       when: "'tag_db_server' in group_names"
     when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
@@ -146,3 +146,7 @@
   #   ansible.builtin.include_tasks: monitoring.yaml
   #   when: "'tag_monitoring_server' in group_names"
 
+  # - name: Apply Monitoring setup
+  #   ansible.builtin.include_role:
+  #     name: "monitoring"
+  #   when: "'tag_nginx_server' in group_names"
