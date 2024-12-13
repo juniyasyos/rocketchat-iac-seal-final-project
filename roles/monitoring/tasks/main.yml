@@ -24,10 +24,3 @@
     mode: push
     recursive: yes
   when: not monitoring_folder.stat.exists
-
-- name: Ensure Docker Compose is up
-  ansible.builtin.shell:
-    cmd: |
-      docker compose -f /home/{{ ansible_user }}/monitoring_config/docker-compose.yml up -d
-  args:
-    executable: /bin/bash

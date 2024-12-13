@@ -1,13 +1,31 @@
-- name: Ensure replica set key is defined
-  ansible.builtin.set_fact:
-    replica_set_key: "3F1FCCBS0RhyuUm3AHcfbIQVYBqNPujFd2RqtvDxRL5g2HT0QVaJFoje0ws+L7"
-
 - name: Synchronize Rocket.Chat containerization files
   ansible.posix.synchronize:
     src: "../../templates/azzuri-dev/separated-mongodb/"
     dest: "/home/{{ ansible_user }}/rocket-chat/"
     mode: push
     recursive: yes
+
+- name: Ensure nginx certificates directory exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
+    state: directory
+    mode: '0755'
+
+- name: Generate SSL certificate and key if not exists
+  ansible.builtin.command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
+  args:
+    creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+
+- name: Set permissions for certificate files
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt"
+    mode: '0644'
+
+- name: Set permissions for key files
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+    mode: '0600'
 
 - name: Create .env file for MongoDB
   ansible.builtin.copy:
@@ -20,7 +38,7 @@
       ALLOW_EMPTY_PASSWORD=no
       MONGODB_ROOT_USER=rocket-chat-mongo-db-super-secret
       MONGODB_ROOT_PASSWORD=password-development-server-mongodb
-      MONGODB_REPLICA_SET_KEY={{ replica_set_key }}
+      MONGODB_REPLICA_SET_KEY=3F1FCCBS0RhyuUm3AHcfbIQVYBqNPujFd2RqtvDxRL5g2HT0QVaJFoje0ws+L7
       MONGODB_HOST={{ ip_db_server }}
       MONGODB_PORT_NUMBER=27017
       MONGODB_DATABASE=rocketchat
@@ -28,3 +46,18 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0644"
+
+- name: Ensure .env file exists and is not empty
+  ansible.builtin.stat:
+    path: "/home/{{ ansible_user }}/rocket-chat/.env"
+  register: env_file_stat
+
+- name: Fail if .env file does not exist or is empty
+  ansible.builtin.fail:
+    msg: ".env file does not exist or is empty. Please check the creation process."
+  when: env_file_stat.stat.exists == false or env_file_stat.stat.size == 0
+
+- name: Debug the status of .env file
+  ansible.builtin.debug:
+    msg: ".env file is present and has content."
+  when: env_file_stat.stat.exists == true and env_file_stat.stat.size > 0

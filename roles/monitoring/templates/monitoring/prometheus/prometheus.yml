@@ -1,8 +1,8 @@
 # Global Configurations
 global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds.
-  scrape_timeout: 10s # Timeout for scraping a target.
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
 
 # Define alerting rules file
 rule_files:

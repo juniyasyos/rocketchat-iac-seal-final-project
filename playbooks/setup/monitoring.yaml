@@ -1,9 +1,18 @@
 ---
 - name: Setup global configuration for Rocket.Chat
-  hosts: tag_monitoring_server
+  hosts: tag_monitoring_server, tag_nginx_server
   become: true
   gather_facts: true
 
   tasks:
   - name: Apply Monitoring setup
-    ansible.builtin.include_tasks: monitoring.yaml
+    ansible.builtin.include_role:
+      name: "monitoring"
+
+  - name: Ensure Docker Compose is up
+    ansible.builtin.shell:
+      cmd: |
+        docker compose -f /home/{{ ansible_user }}/monitoring_config/docker-compose.yml up -d
+    args:
+      executable: /bin/bash
+    when: "'tag_nginx_server' in group_names"

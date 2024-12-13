@@ -31,28 +31,46 @@
       - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
       - "Database IP: {{ ip_db_server | default('Not defined') }}"
 
-  - name: Instal Telnet
+  - name: Install Telnet on required servers
     apt:
       name: telnet
       state: present
     when: "'tag_nginx_server' in group_names or 'tag_db_server' in group_names"
 
-  - name: Izinkan koneksi SSH
+  - name: Allow SSH connections
     ufw:
       rule: allow
       port: ssh
       proto: tcp
 
-  - name: Aktifkan UFW
+  - name: Enable UFW firewall
     ufw:
       state: enabled
 
-  - name: Open port 443 on nginx server (inbound to DB)
+  - name: Open ports on Nginx server (inbound to DB)
     ufw:
       rule: allow
-      port: '443'
+      port: "{{ item }}"
       proto: tcp
+    loop:
+    - '443'
+    - '9100'
+    - '9113'
+    - '9216'
     when: "'tag_nginx_server' in group_names"
+
+  - name: Open ports on Nginx server (inbound to DB)
+    ufw:
+      rule: allow
+      port: "{{ item }}"
+      proto: tcp
+    loop:
+    - '9090'
+    - '9099'
+    - '3030'
+    - '3000'
+    - '9093'
+    when: "'tag_monitoring_server' in group_names"
 
   - name: Open port 27017 on DB server (inbound to Nginx)
     ufw:
@@ -80,54 +98,26 @@
       ansible.builtin.fail:
         msg: "Docker installation failed. Check Docker role or system configuration."
 
-  - name: Setup Application Rocket.Chat and MongoDB
+  - name: Setup Rocket.Chat and MongoDB application
     ansible.builtin.include_tasks: application.yaml
     when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
 
-  - name: Start MongoDB Server
+  - name: Start MongoDB server using Docker Compose
     ansible.builtin.shell: >
       docker compose -f /home/{{ ansible_user }}/rocket-chat/mongodb.yml up -d
     register: docker_compose_up
     changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
     when: "'tag_db_server' in group_names"
 
-  - name: Setup Rocket.Chat Server
-    block:
-    - name: Ensure nginx certificates directory exists
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
-        state: directory
-        mode: '0755'
-
-    - name: Generate SSL certificate and key if not exists
-      ansible.builtin.command: >
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
-      args:
-        creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
-
-    - name: Start Rocket.Chat using Docker Compose
-      ansible.builtin.shell: >
-        docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
-      register: docker_compose_up
-      changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+  - name: Setup Rocket.Chat server using Docker Compose
+    ansible.builtin.shell: >
+      docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
+    register: docker_compose_up
+    changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
     when: "'tag_nginx_server' in group_names"
 
-  - name: Test Connections
+  - name: Test connections between servers
     block:
-    # - name: Test connectivity to MongoDB server from Nginx Server
-    #   uri:
-    #     url: "http://{{ ip_db_server }}"
-    #     method: GET
-    #     status_code: 200
-    #   when: "'tag_nginx_server' in group_names"
-
-    # - name: Test connectivity to Nginx server from MongoDB Server
-    #   uri:
-    #     url: "http://{{ ip_nginx_server }}"
-    #     method: GET
-    #     status_code: 200
-    #   when: "'tag_db_server' in group_names"
-
     - name: Test telnet connectivity to MongoDB server from Nginx Server
       wait_for:
         host: "{{ ip_db_server }}"
@@ -141,12 +131,5 @@
         port: 443
         timeout: 5
       when: "'tag_db_server' in group_names"
-    when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
-  # - name: Apply Monitoring setup
-  #   ansible.builtin.include_tasks: monitoring.yaml
-  #   when: "'tag_monitoring_server' in group_names"
 
-  # - name: Apply Monitoring setup
-  #   ansible.builtin.include_role:
-  #     name: "monitoring"
-  #   when: "'tag_nginx_server' in group_names"
+    when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"

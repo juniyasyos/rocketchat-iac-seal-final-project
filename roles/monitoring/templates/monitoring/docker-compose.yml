@@ -39,20 +39,6 @@ services:
     networks:
       - monitoring
 
-  node_exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node-exporter
-    ports:
-      - '9100:9100'
-    restart: always
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
   alertmanager:
     image: prom/alertmanager:latest
     container_name: alertmanager
@@ -70,27 +56,6 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-
-  nginx-prometheus-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
-    container_name: prometheus-nginx-exporter
-    restart: always
-    env_file: .env
-    command:
-      - '-nginx.scrape-uri=http://nginx/stub_status'
-    expose:
-      - '9113'
-    depends_on:
-      - prometheus
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9113/metrics || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    environment:
-      SCRAPE_URI: "http://nginx/stub_status"
 
 networks:
   monitoring:
