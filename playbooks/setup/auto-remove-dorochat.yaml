@@ -1,0 +1,27 @@
+- name: Hapus container dan konfigurasi terkait rocket-chat
+  hosts: tag_db_server, tag_nginx_server
+  tasks:
+    - name: Hentikan semua container terkait rocket-chat
+      shell: |
+        docker ps -aq --filter "ancestor=rocket-chat" | xargs -r docker stop
+      ignore_errors: yes
+
+    - name: Hapus semua container terkait rocket-chat
+      shell: |
+        docker ps -aq --filter "ancestor=rocket-chat" | xargs -r docker rm
+      ignore_errors: yes
+
+    - name: Hapus semua image terkait rocket-chat
+      shell: |
+        docker images -q --filter "reference='*rocket-chat*'" | xargs -r docker rmi -f
+      ignore_errors: yes
+
+    - name: Hapus volume terkait rocket-chat
+      shell: |
+        docker volume ls -q --filter "name=rocket-chat" | xargs -r docker volume rm
+      ignore_errors: yes
+
+    - name: Hapus network terkait rocket-chat
+      shell: |
+        docker network ls -q --filter "name=rocket-chat" | xargs -r docker network rm
+      ignore_errors: yes

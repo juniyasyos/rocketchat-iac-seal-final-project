@@ -12,7 +12,14 @@
   - name: Ensure Docker Compose is up
     ansible.builtin.shell:
       cmd: |
-        docker compose -f /home/{{ ansible_user }}/monitoring_config/docker-compose.yml up -d
+        docker compose -f /home/{{ ansible_user }}/monitoring_config/target.yml up -d
     args:
       executable: /bin/bash
     when: "'tag_nginx_server' in group_names"
+
+  - name: Setup Rocket.Chat server using Docker Compose
+    ansible.builtin.shell: >
+      docker compose -f /home/{{ ansible_user }}/monitoring_config/monitoring.yml up -d
+    register: docker_compose_up
+    changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+    when: "'tag_monitoring_server' in group_names"

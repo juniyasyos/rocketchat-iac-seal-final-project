@@ -33,24 +33,3 @@ scrape_configs:
     target_label: instance
   - source_labels: [ job ]
     target_label: job
-
-# - job_name: 'nginx'
-#   scrape_interval: 10s
-#   static_configs:
-#   - targets: [ 'nginx:433' ]
-#     labels:
-#       job: 'nginx'
-#       instance: 'nginx_server'
-#   relabel_configs:
-#   - source_labels: [ __address__ ]
-#     target_label: instance
-# - job_name: 'mongodb'
-#   scrape_interval: 30s
-#   static_configs:
-#     - targets: ['mongodb-exporter:9216']
-#       labels:
-#         job: 'mongodb_exporter'
-#         instance: 'mongodb_server'
-#   relabel_configs:
-#     - source_labels: [__address__]
-#       target_label: instance

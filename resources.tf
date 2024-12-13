@@ -10,6 +10,13 @@ resource "aws_security_group" "frontend" {
     cidr_blocks = var.private_subnets
   }
 
+  ingress {
+    from_port       = 23
+    to_port         = 23
+    protocol        = "tcp"
+    security_groups = [aws_security_group.frontend.id]
+  }
+
   # HTTPS terbuka untuk publik (hanya jika endpoint ini publik)
   ingress {
     from_port   = 443
@@ -65,7 +72,6 @@ resource "aws_security_group" "frontend" {
     Env  = var.env
   }
 }
-
 
 # Backend Security Group
 resource "aws_security_group" "backend" {

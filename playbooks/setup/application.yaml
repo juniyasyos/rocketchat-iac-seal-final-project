@@ -36,13 +36,13 @@
       MONGODB_ADVERTISED_HOSTNAME={{ ip_db_server }}
       MONGODB_ENABLE_JOURNAL=true
       ALLOW_EMPTY_PASSWORD=no
-      MONGODB_ROOT_USER=rocket-chat-mongo-db-super-secret
-      MONGODB_ROOT_PASSWORD=password-development-server-mongodb
+      MONGODB_ROOT_USER=rocketchatmongodbadmin
+      MONGODB_ROOT_PASSWORD=passworddevelopmentservermongodb12
       MONGODB_REPLICA_SET_KEY=3F1FCCBS0RhyuUm3AHcfbIQVYBqNPujFd2RqtvDxRL5g2HT0QVaJFoje0ws+L7
       MONGODB_HOST={{ ip_db_server }}
       MONGODB_PORT_NUMBER=27017
       MONGODB_DATABASE=rocketchat
-      MONGO_AUTH_SOURCE=rocket-chat-mongo-db-super-secret
+      MONGO_AUTH_SOURCE=rocketchatmongodbadmin
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0644"
@@ -61,3 +61,4 @@
   ansible.builtin.debug:
     msg: ".env file is present and has content."
   when: env_file_stat.stat.exists == true and env_file_stat.stat.size > 0
+
