@@ -21,8 +21,8 @@ services:
       MONGODB_REPLICA_SET_NAME: ${MONGODB_REPLICA_SET_NAME}
       MONGODB_PORT_NUMBER: ${MONGODB_PORT_NUMBER}
       MONGODB_ADVERTISED_HOSTNAME: ${MONGODB_ADVERTISED_HOSTNAME}
-      MONGODB_ENABLE_JOURNAL: ${MONGODB_ENABLE_JOURNAL}
-      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD}
+      MONGODB_ENABLE_JOURNAL: ${MONGODB_ENABLE_JOURNAL:-true}
+      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD:-no}
       MONGODB_ROOT_USER: ${MONGODB_ROOT_USER}
       MONGODB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
       MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY}
@@ -31,6 +31,13 @@ services:
       MONGODB_DATABASE: ${MONGODB_DATABASE} # Name of the database to create
       MONGODB_USERNAME: ${MONGODB_USERNAME} # Username for the new database user
       MONGODB_PASSWORD: ${MONGODB_PASSWORD} # Password for the new database user
-
+      
+      # Optimize MongoDB's WiredTiger engine
+      MONGODB_EXTRA_FLAGS: "--wiredTigerCacheSizeGB=2" # Set the cache size to 2 GB for better performance in t2.medium
     networks:
       - rocket_chat_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" # Rotate logs to avoid disk space issues
