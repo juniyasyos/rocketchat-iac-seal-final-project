@@ -78,9 +78,9 @@ resource "aws_lambda_function" "rochat_backup" {
   environment {
     variables = {
       BACKUP_BUCKET    = "rochat-backup"
-      MONGODB_USER     = "username-database-bebas"
-      MONGODB_PASS     = "password-database-bebas"
-      MONGODB_HOST     = "172.31.86.132"
+      MONGODB_USER     = "username-env-mongodb"
+      MONGODB_PASS     = "password-env-mongodb"
+      MONGODB_HOST     = "172.31.86.132" # sesuaikan dengan ip private server mongodb
       MONGODB_PORT     = "27017"
       MONGODB_DATABASE = "rocketchat"
     }
