@@ -36,13 +36,6 @@
       delegate_to: localhost
       when: "'tag_nginx_server' in group_names"
 
-    - name: Render Prometheus config file from template locally for MongoDB
-      template:
-        src: "../../roles/monitoring/templates/monitoring/mongodb.yml.j2"
-        dest: "../../roles/monitoring/templates/monitoring/mongodb.yml"
-      delegate_to: localhost
-      when: "'tag_nginx_server' in group_names"
-
     - name: Render Prometheus config file from template locally for datafource grafana dashboard
       template:
         src: "../../roles/monitoring/templates/monitoring/grafana/provisioning/datasources/datasource.yml.j2"
@@ -50,27 +43,27 @@
       delegate_to: localhost
       when: "'tag_nginx_server' in group_names"
 
-  # - name: Ensure Docker is installed
-  #   block:
-  #   - name: Check Docker installation
-  #     ansible.builtin.command:
-  #       cmd: docker --version
-  #     register: docker_check
-  #     changed_when: false
-  #     failed_when: false
+  - name: Ensure Docker is installed
+    block:
+    - name: Check Docker installation
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_check
+      changed_when: false
+      failed_when: false
 
-  #   - name: Install Docker if not installed
-  #     ansible.builtin.include_role:
-  #       name: docker
-  #     when: docker_check.rc != 0
+    - name: Install Docker if not installed
+      ansible.builtin.include_role:
+        name: docker
+      when: docker_check.rc != 0
 
-  #   rescue:
-  #   - name: Fail if Docker installation fails
-  #     ansible.builtin.fail:
-  #       msg: "Docker installation failed. Check Docker role or system configuration."
+    rescue:
+    - name: Fail if Docker installation fails
+      ansible.builtin.fail:
+        msg: "Docker installation failed. Check Docker role or system configuration."
 
-  # - name: Setup Telnet and server connections in the same network
-  #   ansible.builtin.include_tasks: ../helpers/connections.yaml
+  - name: Setup Telnet and server connections in the same network
+    ansible.builtin.include_tasks: ../helpers/connections.yaml
 
   - name: Deploy Rocket.Chat and MongoDB application
     block:
