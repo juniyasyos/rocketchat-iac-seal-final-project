@@ -20,15 +20,15 @@ scrape_configs:
 - job_name: 'prometheus'
   scrape_interval: 5s
   static_configs:
-  - targets: [ '10.0.2.190:9100' ]
+  - targets: [ '{{ ip_nginx_server }}:9100' ]
     labels:
       job: 'node_exporter'
       instance: 'nginx_server'
-  - targets: [ '10.0.2.190:9113' ]
+  - targets: [ '{{ ip_nginx_server }}:9113' ]
     labels:
       job: 'nginx_exporter'
       instance: 'nginx_server'
-  - targets: ['10.0.2.134:9216']
+  - targets: ['{{ ip_monitoring_server }}:9216']
     labels:
       job: 'mongodb_exporter'
       instance: 'mongo_server'

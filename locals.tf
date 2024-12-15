@@ -31,7 +31,7 @@ locals {
     db-server = {
       ami           = data.aws_ami.ubuntu.id
       sg            = [aws_security_group.backend.id]
-      instance_type = var.instance_type_micro
+      instance_type = "t2.large"
     }
   }
 }

@@ -1,0 +1,15 @@
+services:
+  mongodb_exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: mongodb_exporter
+    ports:
+      - '9216:9216'
+    command:
+      - '--mongodb.uri=mongodb://admin:passworddevelopmentservermongodb12@{{ ip_db_server }}:27017/?authSource=admin&replicaSet=rs0'
+    restart: always
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge

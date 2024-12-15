@@ -1,33 +1,12 @@
 services:
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-    - '9099:9090'
-    volumes:
-    - ./prometheus:/etc/prometheus
-    - ./prometheus/data:/prometheus
-    command:
-    - '--config.file=/etc/prometheus/prometheus-target.yml'
-    - '--web.enable-lifecycle'
-    restart: always
-    user: root
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://localhost:9090/-/ready || exit 1" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    networks:
-    - rocket_chat_network
-
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node-exporter
     ports:
-    - '9100:9100'
+      - '9100:9100'
     restart: always
     networks:
-    - rocket_chat_network
+      - rocket_chat_network
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1" ]
       interval: 30s
@@ -38,22 +17,19 @@ services:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: prometheus-nginx-exporter
     restart: always
-    env_file: .env
     command:
-    - '-nginx.scrape-uri=http://nginx/stub_status'
-    expose:
-    - '9113'
-    depends_on:
-    - prometheus
+      - "--nginx.scrape-uri=http://nginx:80/stub_status"
+    ports:
+      - '9113:9113'
     networks:
-    - rocket_chat_network
+      - rocket_chat_network
     healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://localhost:9113/metrics || exit 1" ]
+      test: [ "CMD-SHELL", "wget -qO- http://nginx:80/stub_status || exit 1" ]
       interval: 30s
       timeout: 5s
       retries: 3
     environment:
-      SCRAPE_URI: "http://nginx/stub_status"
+      SCRAPE_URI: "http://nginx:80/stub_status"
 
 networks:
   rocket_chat_network:

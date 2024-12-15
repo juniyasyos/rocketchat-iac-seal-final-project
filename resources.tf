@@ -11,13 +11,12 @@ resource "aws_security_group" "frontend" {
   }
 
   ingress {
-    from_port       = 23
-    to_port         = 23
-    protocol        = "tcp"
-    security_groups = [aws_security_group.frontend.id]
+    from_port = 0
+    to_port   = 65535
+    protocol  = "tcp"
+    self      = true
   }
 
-  # HTTPS terbuka untuk publik (hanya jika endpoint ini publik)
   ingress {
     from_port   = 443
     to_port     = 443

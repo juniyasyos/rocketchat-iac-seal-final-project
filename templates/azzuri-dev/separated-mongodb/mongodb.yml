@@ -27,5 +27,3 @@ services:
       MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY} 
     networks:
     - rocket_chat_network
-
-#  MONGO_OPLOG_URL: "mongodb://${MONGODB_ROOT_USER}:${MONGODB_ROOT_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT_NUMBER}/local?authSource=admin&replicaSet=${>
