@@ -5,7 +5,7 @@ services:
     ports:
       - '9216:9216'
     command:
-      - '--mongodb.uri=mongodb://admin:passworddevelopmentservermongodb12@10.0.2.201:27017/?authSource=admin&replicaSet=rs0'
+      - '--mongodb.uri=mongodb://admin:passworddevelopmentservermongodb12@10.0.2.116:27017/?authSource=admin&replicaSet=rs0'
     restart: always
     networks:
       - monitoring

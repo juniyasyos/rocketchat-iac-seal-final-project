@@ -1,5 +1,5 @@
 module "final-project-vpc" {
-  source   = "./modules/network"
+  source   = "../../modules/network"
   vpc_name = var.vpc_name
   env      = var.env
   cidr     = local.resolved_vpc_cidr
@@ -55,5 +55,5 @@ resource "local_file" "env_file" {
     for instance, eip in aws_eip.eip :
     "${upper(instance)}_EIP=${eip.public_ip}\n${upper(instance)}_DNS=${eip.public_dns}"
   ])
-  filename = "${path.module}/playbooks/setup/ip_elastic.env"
+  filename = "${path.module}/ip_elastic.env"
 }

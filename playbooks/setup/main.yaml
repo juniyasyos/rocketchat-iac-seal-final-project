@@ -11,7 +11,7 @@
         ip_nginx_server: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_monitoring_server: "{{ hostvars[groups['tag_monitoring_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
-        host_monitoring: "{{ groups['tag_monitoring_server'][0] | default('') }}"
+        host_monitoring: "3.233.181.180"
 
     - name: Display fetched IP addresses
       ansible.builtin.debug:
@@ -20,7 +20,7 @@
         - "Frontend (nginx) IP: {{ ip_nginx_server | default('Not defined') }}"
         - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
         - "Database IP: {{ ip_db_server | default('Not defined') }}"
-        - "Host Nginx: {{ host_monitoring | default('Not defined') }}"
+        - "Host Monitoring: {{ host_monitoring | default('Not defined') }}"
 
     - name: Ensure the destination directory exists locally
       file:
@@ -50,27 +50,27 @@
       delegate_to: localhost
       when: "'tag_nginx_server' in group_names"
 
-  - name: Ensure Docker is installed
-    block:
-    - name: Check Docker installation
-      ansible.builtin.command:
-        cmd: docker --version
-      register: docker_check
-      changed_when: false
-      failed_when: false
+  # - name: Ensure Docker is installed
+  #   block:
+  #   - name: Check Docker installation
+  #     ansible.builtin.command:
+  #       cmd: docker --version
+  #     register: docker_check
+  #     changed_when: false
+  #     failed_when: false
 
-    - name: Install Docker if not installed
-      ansible.builtin.include_role:
-        name: docker
-      when: docker_check.rc != 0
+  #   - name: Install Docker if not installed
+  #     ansible.builtin.include_role:
+  #       name: docker
+  #     when: docker_check.rc != 0
 
-    rescue:
-    - name: Fail if Docker installation fails
-      ansible.builtin.fail:
-        msg: "Docker installation failed. Check Docker role or system configuration."
+  #   rescue:
+  #   - name: Fail if Docker installation fails
+  #     ansible.builtin.fail:
+  #       msg: "Docker installation failed. Check Docker role or system configuration."
 
-  - name: Setup Telnet and server connections in the same network
-    ansible.builtin.include_tasks: ../helpers/connections.yaml
+  # - name: Setup Telnet and server connections in the same network
+  #   ansible.builtin.include_tasks: ../helpers/connections.yaml
 
   - name: Deploy Rocket.Chat and MongoDB application
     block:
@@ -110,7 +110,7 @@
         path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
         mode: '0600'
       when: "'tag_nginx_server' in group_names"
-      
+
     - name: Start Rocket.Chat server with Docker Compose
       ansible.builtin.shell: >
         docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
