@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Pull from ECR azzuri
-sudo docker pull 211125298986.dkr.ecr.us-east-1.amazonaws.com/mongodb-backup:latest
+# Build docker image
+docker buildx create --use --name mongodb-backup
+docker buildx build --platform linux/amd64 -t mongodb-backup . --load
 
 # Collect environment variable inputs
 echo "Enter the following environment variables:"
@@ -28,6 +29,6 @@ docker run -it --entrypoint /bin/bash\
     -e AWS_ACCESS_KEY="$AWS_ACCESS_KEY" \
     -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
     -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
-    211125298986.dkr.ecr.us-east-1.amazonaws.com/mongodb-backup
+    mongodb-backup
     
-docker image rmi -f 211125298986.dkr.ecr.us-east-1.amazonaws.com/mongodb-backup
+docker image rmi -f mongodb-backup
