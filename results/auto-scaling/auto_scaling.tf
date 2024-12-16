@@ -3,11 +3,11 @@ resource "aws_launch_template" "nginx_launch_template" {
   name_prefix   = "${local.project_name}-nginx-launch-template"
   image_id      = data.aws_ami.ubuntu.id
   instance_type = var.instance_type_app
-  key_name      = module.final-project-vpc.keypair
+  key_name      = data.aws_key_pair.rocket_chat_key.key_name
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups             = [aws_security_group.frontend.id]
+    security_groups             = data.aws_security_groups.rocket_chat_sgs.ids
   }
 
   tag_specifications {
@@ -24,11 +24,11 @@ resource "aws_launch_template" "nginx_launch_template" {
 
 # Auto Scaling Group for nginx-server
 resource "aws_autoscaling_group" "nginx_asg" {
-  desired_capacity    = 2
-  max_size            = 4
+  desired_capacity    = 1
+  max_size            = 2
   min_size            = 1
   target_group_arns   = [aws_lb_target_group.main.arn]
-  vpc_zone_identifier = module.final-project-vpc.public_subnets
+  vpc_zone_identifier = data.aws_subnets.public.ids
 
   launch_template {
     id      = aws_launch_template.nginx_launch_template.id
@@ -63,8 +63,11 @@ resource "aws_lb" "main" {
   name               = "${local.project_name}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = module.final-project-vpc.public_subnets
+  security_groups    = data.aws_security_groups.rocket_chat_sgs.ids
+  subnets = [
+    data.aws_subnets.public.ids[0],
+    data.aws_subnets.public.ids[1]
+  ]
 
   tags = {
     Name        = "${local.project_name}-alb"
@@ -78,11 +81,11 @@ resource "aws_lb_target_group" "main" {
   name     = "${local.project_name}-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = module.final-project-vpc.vpc_id
+  vpc_id   = data.aws_vpc.rocket-chat.id
 
   health_check {
     enabled             = true
-    path                = "/" # Adjust based on your application
+    path                = "/"
     healthy_threshold   = 3
     unhealthy_threshold = 3
     timeout             = 5

@@ -37,7 +37,7 @@ resource "aws_instance" "this" {
 }
 
 resource "aws_eip" "eip" {
-  for_each = local.instances
+  for_each = local.eip
 
   domain   = "vpc"
   instance = aws_instance.this[each.key].id

@@ -1,5 +1,5 @@
 - name: Setup global configuration for Rocket.Chat
-  hosts: all
+  hosts: tag_testing_server, tag_db_server, tag_monitoring_server
   become: true
   gather_facts: true
   tasks:
@@ -8,16 +8,14 @@
     - name: Get private IPs of servers
       set_fact:
         ip_server_testing: "{{ hostvars[groups['tag_testing_server'][0]].ansible_default_ipv4.address | default('') }}"
-        ip_nginx_server: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_monitoring_server: "{{ hostvars[groups['tag_monitoring_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
-        host_monitoring: "98.83.184.240"
+        host_monitoring: "3.93.122.82"
 
     - name: Display fetched IP addresses
       ansible.builtin.debug:
         msg:
         - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
-        - "Frontend (nginx) IP: {{ ip_nginx_server | default('Not defined') }}"
         - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
         - "Database IP: {{ ip_db_server | default('Not defined') }}"
         - "Host Monitoring: {{ host_monitoring | default('Not defined') }}"
@@ -63,13 +61,38 @@
         msg: "Docker installation failed. Check Docker role or system configuration."
 
   - name: Setup Telnet and server connections in the same network
-    ansible.builtin.include_tasks: ../helpers/connections.yaml
+    block:
+    - name: Configure Base UFW Settings
+      community.general.ufw:
+        rule: allow
+        port: ssh
+        proto: tcp
+
+    - name: Enable UFW Firewall
+      community.general.ufw:
+        state: enabled
+
+    - name: Open Ports for Monitoring Servers
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: [ '9090', '9099', '3030', '3000', '9093' ]
+      when: "'tag_monitoring_server' in group_names"
+
+    - name: Open Ports for DB Servers
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: [ '27017', '9216' ]
+      when: "'tag_db_server' in group_names"
 
   - name: Deploy Rocket.Chat and MongoDB application
     block:
     - name: Setup Rocket.Chat and MongoDB
       ansible.builtin.include_tasks: ../helpers/application.yaml
-      when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
+      when: "'tag_db_server' in group_names"
 
     - name: Start MongoDB server with Docker Compose
       ansible.builtin.shell: >
@@ -77,41 +100,3 @@
       register: docker_compose_up_mongo
       changed_when: "'Starting' in docker_compose_up_mongo.stdout or 'Creating' in docker_compose_up_mongo.stdout"
       when: "'tag_db_server' in group_names"
-
-    - name: Ensure nginx certificates directory exists
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
-        state: directory
-        mode: '0755'
-      when: "'tag_nginx_server' in group_names"
-
-    - name: Generate SSL certificate and key if not exists
-      ansible.builtin.command: >
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
-      args:
-        creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
-      when: "'tag_nginx_server' in group_names"
-
-    - name: Set permissions for certificate files
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt"
-        mode: '0644'
-      when: "'tag_nginx_server' in group_names"
-
-    - name: Set permissions for key files
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
-        mode: '0600'
-      when: "'tag_nginx_server' in group_names"
-
-    - name: Start Rocket.Chat server with Docker Compose
-      ansible.builtin.shell: >
-        docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
-      register: docker_compose_up_chat
-      changed_when: "'Starting' in docker_compose_up_chat.stdout or 'Creating' in docker_compose_up_chat.stdout"
-      when: "'tag_nginx_server' in group_names"
-
-  - name: Setup monitoring tools
-    ansible.builtin.include_tasks: ../helpers/monitoring.yaml
-    when: "'tag_nginx_server' in group_names or 'tag_monitoring_server' in group_names or 'tag_db_server' in group_names"
-

@@ -20,3 +20,4 @@ output "elastic_ips_env" {
   value       = local_file.env_file.content
   description = "Content of the .env file with Elastic IPs"
 }
+
