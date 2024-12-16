@@ -12,15 +12,10 @@
 #     name: docker
 #   when: docker_installed.rc != 0
 
-- name: Check if monitoring_config folder exists
-  stat:
-    path: /home/{{ ansible_user }}/monitoring_config/
-  register: monitoring_folder
-
 - name: Synchronize folder to remote server
   ansible.posix.synchronize:
     src: "{{ role_path }}/templates/monitoring/"
     dest: /home/{{ ansible_user }}/monitoring_config/
     mode: push
     recursive: yes
-  when: not monitoring_folder.stat.exists
+

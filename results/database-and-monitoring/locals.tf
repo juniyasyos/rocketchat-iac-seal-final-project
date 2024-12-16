@@ -18,11 +18,6 @@ locals {
       sg            = [aws_security_group.frontend.id]
       instance_type = var.instance_type_micro
     }
-    nginx_server = {
-      ami           = data.aws_ami.ubuntu.id
-      sg            = [aws_security_group.frontend.id]
-      instance_type = var.instance_type_app
-    }
     monitoring_server = {
       ami           = data.aws_ami.ubuntu.id
       sg            = [aws_security_group.frontend.id]
@@ -32,6 +27,14 @@ locals {
       ami           = data.aws_ami.ubuntu.id
       sg            = [aws_security_group.backend.id]
       instance_type = "t2.large"
+    }
+
+  }
+  eip = {
+    monitoring_server = {
+      ami           = data.aws_ami.ubuntu.id
+      sg            = [aws_security_group.frontend.id]
+      instance_type = var.instance_type_micro
     }
   }
 }

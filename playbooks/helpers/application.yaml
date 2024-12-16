@@ -5,28 +5,6 @@
     mode: push
     recursive: yes
 
-- name: Ensure nginx certificates directory exists
-  ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
-    state: directory
-    mode: '0755'
-
-- name: Generate SSL certificate and key if not exists
-  ansible.builtin.command: >
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
-  args:
-    creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
-
-- name: Set permissions for certificate files
-  ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt"
-    mode: '0644'
-
-- name: Set permissions for key files
-  ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
-    mode: '0600'
-
 - name: Create .env file for MongoDB
   ansible.builtin.copy:
     dest: "/home/{{ ansible_user }}/rocket-chat/.env"
@@ -36,13 +14,13 @@
       MONGODB_ADVERTISED_HOSTNAME={{ ip_db_server }}
       MONGODB_ENABLE_JOURNAL=true
       ALLOW_EMPTY_PASSWORD=no
-      MONGODB_ROOT_USER=rocket-chat-mongo-db-super-secret
-      MONGODB_ROOT_PASSWORD=password-development-server-mongodb
+      MONGODB_ROOT_USER=admin
+      MONGODB_ROOT_PASSWORD=passworddevelopmentservermongodb12
       MONGODB_REPLICA_SET_KEY=3F1FCCBS0RhyuUm3AHcfbIQVYBqNPujFd2RqtvDxRL5g2HT0QVaJFoje0ws+L7
       MONGODB_HOST={{ ip_db_server }}
       MONGODB_PORT_NUMBER=27017
       MONGODB_DATABASE=rocketchat
-      MONGO_AUTH_SOURCE=rocket-chat-mongo-db-super-secret
+      MONGO_AUTH_SOURCE=admin
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0644"
@@ -61,3 +39,4 @@
   ansible.builtin.debug:
     msg: ".env file is present and has content."
   when: env_file_stat.stat.exists == true and env_file_stat.stat.size > 0
+

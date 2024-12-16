@@ -1,0 +1,33 @@
+- name: Configure Base UFW Settings
+  community.general.ufw:
+    rule: allow
+    port: ssh
+    proto: tcp
+
+- name: Enable UFW Firewall
+  community.general.ufw:
+    state: enabled
+
+- name: Open Ports for Nginx Servers
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: [ '80', '443', '9100', '9113', '9216', '9090', '9099', '3030', '3000', '9093' ]
+  when: "'tag_nginx_server' in group_names"
+
+- name: Open Ports for Monitoring Servers
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: [ '9090', '9099', '3030', '3000', '9093' ]
+  when: "'tag_monitoring_server' in group_names"
+
+- name: Open Ports for DB Servers
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: [ '27017', '9216' ]
+  when: "'tag_db_server' in group_names"
