@@ -1,0 +1,43 @@
+version: "3.8"
+
+networks:
+  rocket_chat_network:
+    driver: bridge
+
+volumes:
+  mongodb_data: { driver: local }
+
+services:
+  mongodb:
+    ports:
+      - "${MONGODB_PORT_NUMBER}:${MONGODB_PORT_NUMBER}"
+    image: docker.io/bitnami/mongodb:${MONGODB_VERSION}
+    restart: always
+    volumes:
+      - mongodb_data:/bitnami/mongodb
+    environment:
+      MONGODB_BIND_IP: 0.0.0.0
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_NAME: ${MONGODB_REPLICA_SET_NAME}
+      MONGODB_PORT_NUMBER: ${MONGODB_PORT_NUMBER}
+      MONGODB_ADVERTISED_HOSTNAME: ${MONGODB_ADVERTISED_HOSTNAME}
+      MONGODB_ENABLE_JOURNAL: ${MONGODB_ENABLE_JOURNAL:-true}
+      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD:-no}
+      MONGODB_ROOT_USER: ${MONGODB_ROOT_USER}
+      MONGODB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
+      MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY}
+      
+      # Automatically create a database and user
+      MONGODB_DATABASE: ${MONGODB_DATABASE} # Name of the database to create
+      MONGODB_USERNAME: ${MONGODB_USERNAME} # Username for the new database user
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD} # Password for the new database user
+      
+      # Optimize MongoDB's WiredTiger engine
+      MONGODB_EXTRA_FLAGS: "--wiredTigerCacheSizeGB=2" # Set the cache size to 2 GB for better performance in t2.medium
+    networks:
+      - rocket_chat_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" # Rotate logs to avoid disk space issues
