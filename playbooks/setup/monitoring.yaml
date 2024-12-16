@@ -1,0 +1,8 @@
+- name: Setup Monitoring
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+  - name: Setup monitoring tools
+    ansible.builtin.include_tasks: ../helpers/monitoring.yaml
+    when: "'tag_nginx_server' in group_names or 'tag_monitoring_server' in group_names or 'tag_db_server' in group_names"
