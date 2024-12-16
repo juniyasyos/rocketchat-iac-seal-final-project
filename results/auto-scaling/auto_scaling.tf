@@ -19,7 +19,7 @@ resource "aws_launch_template" "nginx_launch_template" {
     }
   }
 
-  user_data = base64encode(file("rocket-chat.sh"))
+  user_data = base64encode(file("/root/rocketChat-team-iac/results/auto-scaling/rocket-chat.sh"))
 }
 
 # Auto Scaling Group for nginx-server

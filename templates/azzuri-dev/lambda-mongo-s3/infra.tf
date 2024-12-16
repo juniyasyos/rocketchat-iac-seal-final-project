@@ -51,8 +51,8 @@ resource "aws_iam_policy" "s3_access_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
-        Effect   = "Allow",
+        Action = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+        Effect = "Allow",
         Resource = [
           aws_s3_bucket.backup_bucket.arn,
           "${aws_s3_bucket.backup_bucket.arn}/*"

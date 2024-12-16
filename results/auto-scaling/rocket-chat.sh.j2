@@ -33,13 +33,13 @@ chmod 0600 "$CERTS_DIR/server.key"
 cat > "$ROCKET_CHAT_DIR/.env" <<EOL
 MONGODB_VERSION=6.0
 MONGODB_REPLICA_SET_NAME=rs0
-MONGODB_ADVERTISED_HOSTNAME=10.100.2.82
+MONGODB_ADVERTISED_HOSTNAME={{ ip_db_server }}
 MONGODB_ENABLE_JOURNAL=true
 ALLOW_EMPTY_PASSWORD=no
 MONGODB_ROOT_USER=admin
 MONGODB_ROOT_PASSWORD=passworddevelopmentservermongodb12
 MONGODB_REPLICA_SET_KEY=3F1FCCBS0RhyuUm3AHcfbIQVYBqNPujFd2RqtvDxRL5g2HT0QVaJFoje0ws+L7
-MONGODB_HOST=10.100.2.82
+MONGODB_HOST={{ ip_db_server }}
 MONGODB_PORT_NUMBER=27017
 MONGODB_DATABASE=rocketchat
 MONGO_AUTH_SOURCE=admin
@@ -48,6 +48,7 @@ EOL
 # Jalankan playbook Ansible
 cd "$CLONE_DIR"
 ansible-playbook -i inventory.ini playbooks/setup/docker.yaml || exit 1
+{# ansible-playbook -i inventory.ini playbooks/setup/connections.yaml || exit 1 #}
 
 # Jalankan Docker Compose
 docker-compose -f "$ROCKET_CHAT_DIR/nginx-rochat.yml" up -d || exit 1

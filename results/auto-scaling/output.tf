@@ -29,6 +29,6 @@ output "security_group_ids" {
 }
 
 output "subnet_availability_zones" {
-  value = data.aws_subnets.subnets_in_vpc.ids
+  value       = data.aws_subnets.subnets_in_vpc.ids
   description = "The Availability Zones of the subnets in the specified VPC"
 }
