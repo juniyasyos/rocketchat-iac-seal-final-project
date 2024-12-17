@@ -68,33 +68,33 @@
       ansible.builtin.fail:
         msg: "Docker installation failed. Check Docker role or system configuration."
 
-  - name: Setup Telnet and server connections in the same network
-    block:
-    - name: Configure Base UFW Settings
-      community.general.ufw:
-        rule: allow
-        port: ssh
-        proto: tcp
+  # - name: Setup Telnet and server connections in the same network
+  #   block:
+  #   - name: Configure Base UFW Settings
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: ssh
+  #       proto: tcp
 
-    - name: Enable UFW Firewall
-      community.general.ufw:
-        state: enabled
+  #   - name: Enable UFW Firewall
+  #     community.general.ufw:
+  #       state: enabled
 
-    - name: Open Ports for Monitoring Servers
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-      loop: [ '9090', '9099', '3030', '3000', '9093' ]
-      when: "'tag_monitoring_server' in group_names"
+  #   - name: Open Ports for Monitoring Servers
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: "{{ item }}"
+  #       proto: tcp
+  #     loop: [ '9090', '9099', '3030', '3000', '9093' ]
+  #     when: "'tag_monitoring_server' in group_names"
 
-    - name: Open Ports for DB Servers
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-      loop: [ '27017', '9216', '9100']
-      when: "'tag_db_server' in group_names"
+  #   - name: Open Ports for DB Servers
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: "{{ item }}"
+  #       proto: tcp
+  #     loop: [ '27017', '9216', '9100']
+  #     when: "'tag_db_server' in group_names"
 
   - name: Deploy Rocket.Chat and MongoDB application
     block:
