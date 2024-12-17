@@ -32,3 +32,12 @@ output "subnet_availability_zones" {
   value       = data.aws_subnets.subnets_in_vpc.ids
   description = "The Availability Zones of the subnets in the specified VPC"
 }
+
+# Outputs
+output "public_subnets_ids" {
+  value = aws_subnet.public[*].id
+}
+
+output "public_elb_subnets_ids" {
+  value = aws_subnet.public_elb[*].id
+}

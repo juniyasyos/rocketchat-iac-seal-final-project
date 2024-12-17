@@ -1,0 +1,61 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587' # Server SMTP
+  smtp_from: 'from@mail.com'           # Alamat pengirim
+  smtp_auth_username: 'juniyasyos@gmail.com' # Username SMTP
+  smtp_auth_password: 'my-password-alertmanager'
+  resolve_timeout: 5m
+
+route:
+  group_by: [ 'alertname', 'severity' ] # Pengelompokan berdasarkan alertname dan severity
+  group_wait: 30s                       # Waktu tunggu sebelum mengirim grup pertama
+  group_interval: 5m                    # Interval pengiriman alert dalam grup
+  repeat_interval: 1h                   # Interval pengulangan alert
+  receiver: 'email-notification'        # Penerima default
+
+  # Aturan spesifik
+  routes:
+  - matchers:
+    - severity = "critical"
+    receiver: 'email-notification-critical'
+    group_wait: 10s
+    group_interval: 1m
+  - matchers:
+    - severity = "warning"
+    receiver: 'email-notification-warning'
+
+receivers:
+# Default receiver
+- name: 'email-notification'
+  email_configs:
+  - to: 'default@recipient.com'
+    headers:
+      subject: '[Default Alert] {{ .CommonLabels.alertname }}'
+    html: |
+      <h1>Default Alert: {{ .CommonLabels.alertname }}</h1>
+      <p><strong>Status:</strong> {{ .Status }}</p>
+      <p><strong>Details:</strong> {{ .Annotations.description }}</p>
+      <p><strong>Severity:</strong> {{ .Labels.severity }}</p>
+
+# Receiver untuk critical alerts
+- name: 'email-notification-critical'
+  email_configs:
+  - to: 'critical@recipient.com'
+    headers:
+      subject: '[CRITICAL ALERT] {{ .CommonLabels.alertname }}'
+    html: |
+      <h1>Critical Alert: {{ .CommonLabels.alertname }}</h1>
+      <p><strong>Status:</strong> {{ .Status }}</p>
+      <p><strong>Details:</strong> {{ .Annotations.description }}</p>
+      <p><strong>Severity:</strong> {{ .Labels.severity }}</p>
+
+# Receiver untuk warning alerts
+- name: 'email-notification-warning'
+  email_configs:
+  - to: 'warning@recipient.com'
+    headers:
+      subject: '[Warning Alert] {{ .CommonLabels.alertname }}'
+    html: |
+      <h1>Warning Alert: {{ .CommonLabels.alertname }}</h1>
+      <p><strong>Status:</strong> {{ .Status }}</p>
+      <p><strong>Details:</strong> {{ .Annotations.description }}</p>
+      <p><strong>Severity:</strong> {{ .Labels.severity }}</p>

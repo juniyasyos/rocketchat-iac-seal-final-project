@@ -37,34 +37,34 @@ services:
     networks:
     - rocket_chat_network
 
-  node_exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node-exporter
-    ports:
-    - '9100:9100'
-    restart: always
-    networks:
-    - rocket_chat_network
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+  # node_exporter:
+  #   image: quay.io/prometheus/node-exporter:latest
+  #   container_name: node-exporter
+  #   ports:
+  #   - '9100:9100'
+  #   restart: always
+  #   networks:
+  #   - rocket_chat_network
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1" ]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
 
-  nginx-prometheus-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
-    container_name: prometheus-nginx-exporter
-    restart: always
-    command:
-    - "--nginx.scrape-uri=http://nginx:80/stub_status"
-    ports:
-    - '9113:9113'
-    networks:
-    - rocket_chat_network
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://nginx:80/stub_status || exit 1" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    environment:
-      SCRAPE_URI: "http://nginx:80/stub_status"
+  # nginx-prometheus-exporter:
+  #   image: nginx/nginx-prometheus-exporter:latest
+  #   container_name: prometheus-nginx-exporter
+  #   restart: always
+  #   command:
+  #   - "--nginx.scrape-uri=http://nginx:80/stub_status"
+  #   ports:
+  #   - '9113:9113'
+  #   networks:
+  #   - rocket_chat_network
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "wget -qO- http://nginx:80/stub_status || exit 1" ]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #   environment:
+  #     SCRAPE_URI: "http://nginx:80/stub_status"

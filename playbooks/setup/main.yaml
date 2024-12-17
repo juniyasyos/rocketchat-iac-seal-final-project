@@ -11,7 +11,8 @@
         ip_nginx_server: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_monitoring_server: "{{ hostvars[groups['tag_monitoring_server'][0]].ansible_default_ipv4.address | default('') }}"
         ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
-        host_monitoring: "98.83.184.240"
+        host_monitoring: "{{ hostvars[groups['tag_monitoring_server'][0]].inventory_hostname }}"
+
 
     - name: Display fetched IP addresses
       ansible.builtin.debug:

@@ -1,0 +1,74 @@
+groups:
+  - name: server_health_alerts
+    rules:
+      # High Request Rate for Nginx server
+      - alert: HighRequestRate
+        expr: rate(http_requests_total{job="nginx"}[5m]) > 200
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: High request rate on Nginx server
+          description: '{{ $labels.instance }} has high request rate (>200 req/min) for the last 5 minutes.'
+
+      # CPU Load Alert for Nginx Server
+      - alert: HighCPULoad
+        expr: node_load1{job="nginx"} > 1.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High CPU load detected on Nginx
+          description: '{{ $labels.instance }} has CPU load > 1.0 for the last 5 minutes.'
+
+      # High Memory Usage Alert
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High memory usage on server
+          description: '{{ $labels.instance }} has less than 15% available memory.'
+
+      # Disk Usage Alert
+      - alert: HighDiskUsage
+        expr: (node_filesystem_free_bytes{fstype!="tmpfs", job="nginx"} / node_filesystem_size_bytes{fstype!="tmpfs", job="nginx"}) * 100 < 20
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: High disk usage on Nginx server
+          description: '{{ $labels.instance }} has less than 20% free disk space on filesystem {{ $labels.mountpoint }}.'
+
+  - name: node_exporter_alerts
+    rules:
+      # Node Exporter Disk IO
+      - alert: HighDiskIO
+        expr: rate(node_disk_reads_bytes_total[5m]) > 10e6
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High Disk I/O detected
+          description: '{{ $labels.instance }} has high disk read/write rate (>10MB/s) for the last 5 minutes.'
+
+      # Node Exporter Network Utilization
+      - alert: HighNetworkUsage
+        expr: rate(node_network_receive_bytes_total[5m]) > 1e8 or rate(node_network_transmit_bytes_total[5m]) > 1e8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High network usage detected
+          description: '{{ $labels.instance }} has high network utilization for the last 5 minutes (either receive or transmit > 100MB).'
+
+      # Node Exporter Load Average
+      - alert: HighLoadAverage
+        expr: node_load1 > 1.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High load average on the server
+          description: '{{ $labels.instance }} has load average > 1.5 for the last 5 minutes.'

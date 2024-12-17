@@ -75,3 +75,7 @@ variable "host_port" {
   description = "port"
   type        = number
 }
+
+variable "public_subnets_elb" {
+  default = ["10.100.10.0/24", "10.100.20.0/24"]
+}

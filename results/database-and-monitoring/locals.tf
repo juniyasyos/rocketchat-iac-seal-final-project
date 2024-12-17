@@ -1,7 +1,7 @@
 # Local values for reuse throughout
 # Local values for reuse throughout
 locals {
-  project_name            = "Rocket Chat Project"
+  project_name            = "rocket-chat-project-seal"
   environment             = var.env
   region                  = var.aws_region
   key_name                = var.key_name
