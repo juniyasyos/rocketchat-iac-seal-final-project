@@ -15,17 +15,12 @@ module "final-project-vpc" {
 
 # EC2 Instances
 resource "aws_instance" "this" {
-  for_each      = local.instances
-  ami           = each.value.ami
-  instance_type = each.value.instance_type
-  key_name      = module.final-project-vpc.keypair
-  # subnet_id = module.final-project-vpc.public_subnets[lookup({
-  #   "testing-server" = 1,
-  #   "nginx-server"   = 1,
-  #   "app-server"     = 1,
-  # }, each.key)]
+  for_each                    = local.instances
+  ami                         = each.value.ami
+  instance_type               = each.value.instance_type
+  key_name                    = module.final-project-vpc.keypair
   subnet_id                   = module.final-project-vpc.public_subnets[0]
-  security_groups             = [aws_security_group.frontend.id]
+  security_groups             = each.value.sg
   associate_public_ip_address = true
 
   root_block_device {
@@ -41,8 +36,24 @@ resource "aws_instance" "this" {
   }
 }
 
-# Elastic IP hanya untuk nginx-server
-resource "aws_eip" "nginx" {
+resource "aws_eip" "eip" {
+  for_each = local.instances
+
   domain   = "vpc"
-  instance = aws_instance.this["nginx-server"].id
+  instance = aws_instance.this[each.key].id
+
+  tags = {
+    Name        = "${each.key}-eip"
+    Project     = local.project_name
+    Environment = local.environment
+  }
+}
+
+
+resource "local_file" "env_file" {
+  content = join("\n", [
+    for instance, eip in aws_eip.eip :
+    "${upper(instance)}_EIP=${eip.public_ip}\n${upper(instance)}_DNS=${eip.public_dns}"
+  ])
+  filename = "${path.module}/playbooks/setup/ip_elastic.env"
 }

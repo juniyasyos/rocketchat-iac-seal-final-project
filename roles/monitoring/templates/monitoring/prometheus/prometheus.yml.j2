@@ -1,0 +1,39 @@
+# Global Configurations
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Define alerting rules file
+rule_files:
+- alert_rules.yml
+
+# Define alertmanager configuration
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets: [ 'alertmanager:9093' ]
+
+# Scraping configurations
+scrape_configs:
+- job_name: 'prometheus'
+  scrape_interval: 5s
+  static_configs:
+  - targets: [ '{{ ip_nginx_server }}:9100' ]
+    labels:
+      job: 'node_exporter'
+      instance: 'nginx_server'
+  - targets: [ '{{ ip_nginx_server }}:9113' ]
+    labels:
+      job: 'nginx_exporter'
+      instance: 'nginx_server'
+  - targets: ['{{ ip_monitoring_server }}:9216']
+    labels:
+      job: 'mongodb_exporter'
+      instance: 'mongo_server'
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: instance
+  - source_labels: [ job ]
+    target_label: job

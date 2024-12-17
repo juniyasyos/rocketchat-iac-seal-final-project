@@ -23,6 +23,8 @@ services:
       - mongodb
     expose:
       - ${PORT:-3000}
+    networks:
+      - monitoring
 
   mongodb:
     image: docker.io/bitnami/mongodb:${MONGODB_VERSION:-6.0}
@@ -50,4 +52,9 @@ services:
       - "443:443"
     depends_on:
       - rocketchat
-      
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge

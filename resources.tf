@@ -10,12 +10,25 @@ resource "aws_security_group" "frontend" {
     cidr_blocks = var.private_subnets
   }
 
-  # HTTPS terbuka untuk publik (hanya jika endpoint ini publik)
+  ingress {
+    from_port = 0
+    to_port   = 65535
+    protocol  = "tcp"
+    self      = true
+  }
+
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = var.public_subnets
   }
 
   # Akses terbatas pada IP spesifik untuk berbagai port
@@ -37,6 +50,14 @@ resource "aws_security_group" "frontend" {
     cidr_blocks = var.ip_secure
   }
 
+  # Mengizinkan ICMP (ping) dari subnet lokal dalam VPC
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = var.public_subnets
+  }
+
   # Semua lalu lintas keluar diperbolehkan
   egress {
     from_port   = 0
@@ -55,20 +76,12 @@ resource "aws_security_group" "frontend" {
 resource "aws_security_group" "backend" {
   vpc_id = module.final-project-vpc.vpc_id
 
-  # Referensi antar security group untuk backend
+  # Port MongoDB Server
   ingress {
-    from_port       = 3000
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.frontend.id]
-  }
-
-  # Port backend (8000) hanya dapat diakses oleh frontend SG
-  ingress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.frontend.id]
+    from_port   = 27017
+    to_port     = 27017
+    protocol    = "tcp"
+    cidr_blocks = var.public_subnets
   }
 
   # SSH hanya untuk IP tertentu
@@ -77,6 +90,14 @@ resource "aws_security_group" "backend" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = var.ip_secure
+  }
+
+  # Mengizinkan ICMP (ping) antar instance di VPC
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = var.public_subnets
   }
 
   # Semua lalu lintas keluar diperbolehkan

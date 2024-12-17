@@ -14,6 +14,10 @@ output "keypair" {
 output "vpc_id" {
   value = module.vpc.vpc_id
 }
+
+output "vpc_igw" {
+  value = module.vpc.igw_id
+}
 # # Output untuk CIDR Blocks public_subnets
 # output "public_subnets_blocks" {
 #   value = [for i in range(length(aws_subnet.public)) : aws_subnet.public[i].cidr_block]

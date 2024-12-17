@@ -1,0 +1,43 @@
+networks:
+  rocket_chat_network:
+    driver: bridge
+
+volumes:
+  mongodb_data: { driver: local }
+
+services:
+  mongodb:
+    ports:
+    - "${MONGODB_PORT_NUMBER}:${MONGODB_PORT_NUMBER}"
+    image: docker.io/bitnami/mongodb:${MONGODB_VERSION}
+    restart: always
+    volumes:
+    - mongodb_data:/bitnami/mongodb
+    environment:
+      MONGODB_AUTHENTICATION_DATABASE: admin
+      MONGODB_BIND_IP: 0.0.0.0
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_NAME: ${MONGODB_REPLICA_SET_NAME}
+      MONGODB_PORT_NUMBER: ${MONGODB_PORT_NUMBER}
+      MONGODB_ADVERTISED_HOSTNAME: ${MONGODB_ADVERTISED_HOSTNAME}
+      MONGODB_ENABLE_JOURNAL: ${MONGODB_ENABLE_JOURNAL}
+      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD}
+      MONGODB_ROOT_USER: ${MONGODB_ROOT_USER}
+      MONGODB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
+      MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY}
+    networks:
+    - rocket_chat_network
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    ports:
+    - '9100:9100'
+    restart: always
+    networks:
+    - rocket_chat_network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:9100/metrics || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3

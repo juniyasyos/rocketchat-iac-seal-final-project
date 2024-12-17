@@ -57,3 +57,5 @@ templates/azzuri-dev/nginx/certs/
 templates/azzuri-dev/separated-mongodb/.env
 templates/azzuri-dev/separated-mongodb/nginx/certs
 azzuri-dev/nginx
+awscliv2.zip
+templates/azzuri-dev/aws-lambda

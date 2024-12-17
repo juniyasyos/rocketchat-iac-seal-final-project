@@ -1,27 +1,48 @@
----
-- name: Setup global configuration rocket chat
+- name: Setup global configuration for Rocket.Chat
   hosts: all
   become: true
   gather_facts: true
-
   tasks:
   - name: Fetch private IP addresses
     block:
-    - name: Get private IP of testing server
+    - name: Get private IPs of servers
       set_fact:
         ip_server_testing: "{{ hostvars[groups['tag_testing_server'][0]].ansible_default_ipv4.address | default('') }}"
+        ip_nginx_server: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
+        ip_monitoring_server: "{{ hostvars[groups['tag_monitoring_server'][0]].ansible_default_ipv4.address | default('') }}"
+        ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
+        host_monitoring: "{{ hostvars[groups['tag_monitoring_server'][0]].inventory_hostname }}"
 
-    - name: Get private IP of frontend server
-      set_fact:
-        ip_target_testing: "{{ hostvars[groups['tag_nginx_server'][0]].ansible_default_ipv4.address | default('') }}"
 
-    - name: Debug IP addresses
+    - name: Display fetched IP addresses
       ansible.builtin.debug:
         msg:
         - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
-        - "Nginx IP: {{ ip_target_testing | default('Not defined') }}"
-    tags:
-      - get-ip
+        - "Frontend (nginx) IP: {{ ip_nginx_server | default('Not defined') }}"
+        - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
+        - "Database IP: {{ ip_db_server | default('Not defined') }}"
+        - "Host Monitoring: {{ host_monitoring | default('Not defined') }}"
+
+    - name: Ensure the destination directory exists locally
+      file:
+        path: "../../roles/monitoring/templates/monitoring/prometheus"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+
+    - name: Render Prometheus config file from template locally for Prometheus
+      template:
+        src: "../../roles/monitoring/templates/monitoring/prometheus/prometheus.yml.j2"
+        dest: "../../roles/monitoring/templates/monitoring/prometheus/prometheus.yml"
+      delegate_to: localhost
+      when: "'tag_nginx_server' in group_names"
+
+    - name: Render Prometheus config file from template locally for datafource grafana dashboard
+      template:
+        src: "../../roles/monitoring/templates/monitoring/grafana/provisioning/datasources/datasource.yml.j2"
+        dest: "../../roles/monitoring/templates/monitoring/grafana/provisioning/datasources/datasource.yml"
+      delegate_to: localhost
+      when: "'tag_nginx_server' in group_names"
 
   - name: Ensure Docker is installed
     block:
@@ -42,58 +63,56 @@
       ansible.builtin.fail:
         msg: "Docker installation failed. Check Docker role or system configuration."
 
-  # - name: Apply Monitoring setup
-  #   ansible.builtin.include_role:
-  #     name: "monitoring"
-  #   when: "'tag_nginx_server' in group_names"
+  - name: Setup Telnet and server connections in the same network
+    ansible.builtin.include_tasks: ../helpers/connections.yaml
 
-  - name: Setup Application Rocket.Chat
+  - name: Deploy Rocket.Chat and MongoDB application
     block:
-    - name: Synchronize Rocket.Chat containerization files
-      ansible.posix.synchronize:
-        src: "../../templates/azzuri-dev/"
-        dest: "/home/{{ ansible_user }}/rocket-chat/"
-        mode: push
-        recursive: yes
+    - name: Setup Rocket.Chat and MongoDB
+      ansible.builtin.include_tasks: ../helpers/application.yaml
+      when: "'tag_db_server' in group_names or 'tag_nginx_server' in group_names"
+
+    - name: Start MongoDB server with Docker Compose
+      ansible.builtin.shell: >
+        docker compose -f /home/{{ ansible_user }}/rocket-chat/mongodb.yml up -d
+      register: docker_compose_up_mongo
+      changed_when: "'Starting' in docker_compose_up_mongo.stdout or 'Creating' in docker_compose_up_mongo.stdout"
+      when: "'tag_db_server' in group_names"
 
     - name: Ensure nginx certificates directory exists
-      file:
+      ansible.builtin.file:
         path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs"
         state: directory
         mode: '0755'
+      when: "'tag_nginx_server' in group_names"
 
     - name: Generate SSL certificate and key if not exists
-      command: >
+      ansible.builtin.command: >
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key -out /home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt -subj "/C=US/ST=State/L=City/O=Organization/OU=IT/CN=localhost"
       args:
         creates: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+      when: "'tag_nginx_server' in group_names"
 
-    - name: Verify Docker Compose installation
-      command: docker compose version
-      register: docker_compose_check
-      failed_when: docker_compose_check.rc != 0
-      changed_when: false
+    - name: Set permissions for certificate files
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.crt"
+        mode: '0644'
+      when: "'tag_nginx_server' in group_names"
 
-    - name: Start Rocket.Chat using Docker Compose
-      ansible.builtin.shell:
-        cmd: >
-          docker compose -f /home/{{ ansible_user }}/rocket-chat/docker-compose.yml up -d
-      args:
-        executable: /bin/bash
-      register: docker_compose_up
-      changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
-    when: "'tag_nginx_server' in group_names"
-  # - name: Configure Testing Environment
-  #   block:
-  #   - name: Apply testing role with required variables
-  #     ansible.builtin.include_role:
-  #       name: "{{ testing_role }}"
-  #     vars:
-  #       ip_target: "{{ ip_target_frontend }}"
-  #       ip_server: "{{ ip_target_testing }}"
-  #     when: "'tag_testing_server' in group_names"
+    - name: Set permissions for key files
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/rocket-chat/nginx/certs/server.key"
+        mode: '0600'
+      when: "'tag_nginx_server' in group_names"
 
-  #   rescue:
-  #   - name: Handle testing setup failure
-  #     ansible.builtin.debug:
-  #       msg: "Testing setup failed, but continuing deployment."
+    - name: Start Rocket.Chat server with Docker Compose
+      ansible.builtin.shell: >
+        docker compose -f /home/{{ ansible_user }}/rocket-chat/nginx-rochat.yml up -d
+      register: docker_compose_up_chat
+      changed_when: "'Starting' in docker_compose_up_chat.stdout or 'Creating' in docker_compose_up_chat.stdout"
+      when: "'tag_nginx_server' in group_names"
+
+  - name: Setup monitoring tools
+    ansible.builtin.include_tasks: ../helpers/monitoring.yaml
+    when: "'tag_nginx_server' in group_names or 'tag_monitoring_server' in group_names or 'tag_db_server' in group_names"
+

@@ -1,0 +1,68 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+    - '9099:9090'
+    volumes:
+    - ./prometheus:/etc/prometheus
+    - ./prometheus/data:/prometheus
+    command:
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--web.enable-lifecycle'
+    restart: always
+    user: root
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:9090/-/ready || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+    - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-server
+    ports:
+    - '3030:3000'
+    volumes:
+    - ./grafana/data:/var/lib/grafana
+    - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    restart: always
+    user: root
+    environment:
+    - GF_SECURITY_ADMIN_USER=admin
+    - GF_SECURITY_ADMIN_PASSWORD=my-password-grafana
+    - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+    - GF_DASHBOARD_JSON_ENABLED=true
+    - GF_DATASOURCES_DEFAULT_URL=http://prometheus:9090
+    networks:
+    - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+    - '9093:9093'
+    volumes:
+    - ./alertmanager:/etc/alertmanager
+    command:
+    - '--config.file=/etc/alertmanager/alertmanager.yml'
+    restart: always
+    networks:
+    - monitoring
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:9093/-/ready || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus-data:

@@ -1,0 +1,1 @@
+Arahkan ke folder `backup-mongodb`. Untuk backup, cukup jalankan script `run-backup.sh` di server mongodb. Kemudian masukkan variabel-variabel yang diminta input. 

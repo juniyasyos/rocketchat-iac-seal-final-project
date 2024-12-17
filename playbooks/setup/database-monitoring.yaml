@@ -1,0 +1,110 @@
+- name: Setup global configuration for Rocket.Chat
+  hosts: tag_testing_server, tag_db_server, tag_monitoring_server
+  become: true
+  gather_facts: true
+  tasks:
+  - name: Fetch private IP addresses
+    block:
+    - name: Get private IPs of servers
+      set_fact:
+        ip_server_testing: "{{ hostvars[groups['tag_testing_server'][0]].ansible_default_ipv4.address | default('') }}"
+        ip_monitoring_server: "{{ hostvars[groups['tag_monitoring_server'][0]].ansible_default_ipv4.address | default('') }}"
+        ip_db_server: "{{ hostvars[groups['tag_db_server'][0]].ansible_default_ipv4.address | default('') }}"
+        host_monitoring: "{{ hostvars[groups['tag_monitoring_server'][0]].inventory_hostname }}"
+
+    - name: Display fetched IP addresses
+      ansible.builtin.debug:
+        msg:
+        - "Testing IP: {{ ip_server_testing | default('Not defined') }}"
+        - "Monitoring IP: {{ ip_monitoring_server | default('Not defined') }}"
+        - "Database IP: {{ ip_db_server | default('Not defined') }}"
+        - "Host Monitoring: {{ host_monitoring | default('Not defined') }}"
+
+    - name: Render template config file from template locally for templates auto-scaling
+      template:
+        src: "/root/rocketChat-team-iac/results/auto-scaling/rocket-chat.sh.j2"
+        dest: "/root/rocketChat-team-iac/results/auto-scaling/rocket-chat.sh"
+      delegate_to: localhost
+      when: "'tag_db_server' in group_names"
+
+    - name: Ensure the destination directory exists locally
+      file:
+        path: "../../roles/monitoring/templates/monitoring/prometheus"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      when: "'tag_db_server' in group_names"
+
+    - name: Render Prometheus config file from template locally for Prometheus
+      template:
+        src: "../../roles/monitoring/templates/monitoring/prometheus/prometheus-mongo.yml.j2"
+        dest: "../../roles/monitoring/templates/monitoring/prometheus/prometheus-mongo.yml"
+      delegate_to: localhost
+      when: "'tag_db_server' in group_names"
+
+    - name: Render Prometheus config file from template locally for datafource grafana dashboard
+      template:
+        src: "../../roles/monitoring/templates/monitoring-mongo/grafana/provisioning/datasources/datasource.yml.j2"
+        dest: "../../roles/monitoring/templates/monitoring-mongo/grafana/provisioning/datasources/datasource.yml"
+      delegate_to: localhost
+      when: "'tag_db_server' in group_names"
+
+  - name: Ensure Docker is installed
+    block:
+    - name: Check Docker installation
+      ansible.builtin.command:
+        cmd: docker --version
+      register: docker_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install Docker if not installed
+      ansible.builtin.include_role:
+        name: docker
+      when: docker_check.rc != 0
+
+    rescue:
+    - name: Fail if Docker installation fails
+      ansible.builtin.fail:
+        msg: "Docker installation failed. Check Docker role or system configuration."
+
+  # - name: Setup Telnet and server connections in the same network
+  #   block:
+  #   - name: Configure Base UFW Settings
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: ssh
+  #       proto: tcp
+
+  #   - name: Enable UFW Firewall
+  #     community.general.ufw:
+  #       state: enabled
+
+  #   - name: Open Ports for Monitoring Servers
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: "{{ item }}"
+  #       proto: tcp
+  #     loop: [ '9090', '9099', '3030', '3000', '9093' ]
+  #     when: "'tag_monitoring_server' in group_names"
+
+  #   - name: Open Ports for DB Servers
+  #     community.general.ufw:
+  #       rule: allow
+  #       port: "{{ item }}"
+  #       proto: tcp
+  #     loop: [ '27017', '9216', '9100']
+  #     when: "'tag_db_server' in group_names"
+
+  - name: Deploy Rocket.Chat and MongoDB application
+    block:
+    - name: Setup Rocket.Chat and MongoDB
+      ansible.builtin.include_tasks: ../helpers/application.yaml
+      when: "'tag_db_server' in group_names"
+
+    - name: Start MongoDB server with Docker Compose
+      ansible.builtin.shell: >
+        docker compose -f /home/{{ ansible_user }}/rocket-chat/mongodb-elb.yml up -d
+      register: docker_compose_up_mongo
+      changed_when: "'Starting' in docker_compose_up_mongo.stdout or 'Creating' in docker_compose_up_mongo.stdout"
+      when: "'tag_db_server' in group_names"

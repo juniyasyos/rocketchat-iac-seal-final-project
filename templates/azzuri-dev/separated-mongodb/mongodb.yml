@@ -1,5 +1,10 @@
+networks:
+  rocket_chat_network:
+    driver: bridge
+
 volumes:
   mongodb_data: { driver: local }
+
 services:
   mongodb:
     ports:
@@ -9,6 +14,7 @@ services:
     volumes:
       - mongodb_data:/bitnami/mongodb
     environment:
+      MONGODB_AUTHENTICATION_DATABASE: admin
       MONGODB_BIND_IP: 0.0.0.0
       MONGODB_REPLICA_SET_MODE: primary
       MONGODB_REPLICA_SET_NAME: ${MONGODB_REPLICA_SET_NAME}
@@ -18,4 +24,6 @@ services:
       ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD}
       MONGODB_ROOT_USER: ${MONGODB_ROOT_USER}
       MONGODB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD}
-      MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY}  
+      MONGODB_REPLICA_SET_KEY: ${MONGODB_REPLICA_SET_KEY} 
+    networks:
+    - rocket_chat_network

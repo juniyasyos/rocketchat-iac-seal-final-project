@@ -16,10 +16,7 @@ output "instance_security_group" {
   value       = [for instance in aws_instance.this : instance.security_groups]
 }
 
-output "eip-public" {
-  value = aws_eip.nginx.public_ip
-}
-
-output "eip-dns" {
-  value = aws_eip.nginx.public_dns
+output "elastic_ips_env" {
+  value       = local_file.env_file.content
+  description = "Content of the .env file with Elastic IPs"
 }

@@ -34,7 +34,7 @@ check_exists() {
 
 # Inisialisasi Terraform
 run_terraform() {
-  log "Inisialisasi Terraform"
+  log "Inisialisasi Terraform (init, fmt, and validate)"
   terraform init
   terraform fmt --recursive
   terraform validate
@@ -75,12 +75,21 @@ setup_python_env() {
   log "Menyiapkan Python Virtual Environment (.venv)"
   check_exists "requirements.txt"
 
-  if [[ ! -d .venv ]]; then
+  # Periksa apakah .venv sudah ada
+  if [[ -d .venv ]]; then
+    log ".venv sudah ada, melewati pembuatan ulang"
+  else
+    log "Membuat virtual environment baru di .venv"
     python3 -m venv .venv
+
+    # Install dependensi dari requirements.txt
+    log "Menginstal dependensi dari requirements.txt"
+    pip install -r requirements.txt
   fi
 
+  # Aktifkan virtual environment
+  log "Mengaktifkan virtual environment"
   source .venv/bin/activate
-  pip install -r requirements.txt
 }
 
 # Parsing options dari command-line arguments
@@ -94,33 +103,40 @@ DESTROY=false
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    --task-all) TASK_ALL=true ;;
-    --skip-apply) SKIP_APPLY=true ;;
-    --skip-ansible) SKIP_ANSIBLE=true ;;
-    --plan-only) PLAN_ONLY=true ;;
-    --env=*) ENV_FILE="${1#*=}" ;;
-    --ansi=*) ANSI_ENV="${1#*=}" ;;
-    --destroy) DESTROY=true ;;
-    --help) show_help; exit 0 ;;
-    *) echo "Unknown option: $1"; show_help; exit 1 ;;
+  --task-all) TASK_ALL=true ;;
+  --skip-apply) SKIP_APPLY=true ;;
+  --skip-ansible) SKIP_ANSIBLE=true ;;
+  --plan-only) PLAN_ONLY=true ;;
+  --env=*) ENV_FILE="${1#*=}" ;;
+  --ansi=*) ANSI_ENV="${1#*=}" ;;
+  --destroy) DESTROY=true ;;
+  --help)
+    show_help
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1"
+    show_help
+    exit 1
+    ;;
   esac
   shift
 done
 
-# Validasi direktori dan file sebelum melanjutkan
-check_exists "./playbooks"
-check_exists "./requirements.txt"
-
-# Setup virtual environment
-setup_python_env
-
 # Menjalankan Terraform sesuai opsi
-if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == false || "$DESTROY" == true ]]; then
+if [[ "$TASK_ALL" == true || "$PLAN_ONLY" == true || "$SKIP_APPLY" == true || "$DESTROY" == true ]]; then
   run_terraform
 fi
 
 # Menjalankan Ansible jika diperlukan
 if [[ "$TASK_ALL" == true && "$SKIP_ANSIBLE" == false && "$DESTROY" == false ]]; then
+  # Validasi direktori dan file sebelum melanjutkan
+  check_exists "./playbooks"
+  check_exists "./requirements.txt"
+
+  # Setup virtual environment
+  setup_python_env
+
   run_ansible
 fi
 
