@@ -42,17 +42,17 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      # Step 6: Create PR for formatting changes
-      - name: Create Pull Request
-        if: steps.format.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-          branch: auto-terraform-format
-          base: main
-          commit-message: "chore: Auto-correct Terraform formatting"
-          title: "chore: Auto-correct Terraform formatting"
-          body: |
-            This PR includes automatic corrections for Terraform formatting issues.
-          delete-branch: false
+      # # Step 6: Create PR for formatting changes
+      # - name: Create Pull Request
+      #   if: steps.format.outputs.changed == 'true'
+      #   uses: peter-evans/create-pull-request@v7
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+      #     branch: auto-terraform-format
+      #     base: main
+      #     commit-message: "chore: Auto-correct Terraform formatting"
+      #     title: "chore: Auto-correct Terraform formatting"
+      #     body: |
+      #       This PR includes automatic corrections for Terraform formatting issues.
+      #     delete-branch: false
