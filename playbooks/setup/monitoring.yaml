@@ -1,8 +1,18 @@
 - name: Setup Monitoring
-  hosts: all
+  hosts: tag_db_server, tag_monitoring_server
   become: true
   gather_facts: true
   tasks:
-  - name: Setup monitoring tools
-    ansible.builtin.include_tasks: ../helpers/monitoring.yaml
-    when: "'tag_nginx_server' in group_names or 'tag_monitoring_server' in group_names or 'tag_db_server' in group_names"
+  - name: Synchronize folder to remote server
+    ansible.posix.synchronize:
+      src: "../../roles/monitoring/templates/monitoring-mongo/"
+      dest: /home/{{ ansible_user }}/monitoring_config/
+      mode: push
+      recursive: yes
+
+  - name: Setup Rocket.Chat server for monitoring application using Docker Compose
+    ansible.builtin.shell: >
+      docker compose -f /home/{{ ansible_user }}/monitoring_config/monitoring.yml up -d
+    register: docker_compose_up
+    changed_when: "'Starting' in docker_compose_up.stdout or 'Creating' in docker_compose_up.stdout"
+    when: "'tag_monitoring_server' in group_names"
